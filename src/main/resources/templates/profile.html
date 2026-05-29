@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="card" style="margin-bottom:24px;">
+        <div class="profile-header">
+            <div class="profile-avatar"
+                 th:style="'background:' + ${user.avatarColor}"
+                 th:text="${#strings.substring(user.username,0,1).toUpperCase()}">U</div>
+            <div>
+                <div class="profile-name" th:text="${user.username}">Username</div>
+                <div class="profile-level" th:text="'Nível ' + ${user.level} + ' Desenvolvedor Java'">Nível 1</div>
+                <div style="margin-top:8px;">
+                    <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+                        <span>Progresso para o Nível <span th:text="${user.level+1}">2</span></span>
+                        <span th:text="${levelProgress + '/100 XP'}">0/100 XP</span>
+                    </div>
+                    <div class="progress-bar-container" style="height:10px;">
+                        <div class="progress-bar-fill" th:style="'width:' + ${levelProgress} + '%'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-value" th:text="${user.xp}">0</div>
+            <div class="stat-name">XP Total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-value" th:text="${user.streakDays}">0</div>
+            <div class="stat-name">Dias Seguidos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏅</div>
+            <div class="stat-value" th:text="${#sets.size(user.achievements)}">0</div>
+            <div class="stat-name">Conquistas</div>
+        </div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="card">
+        <h2 style="font-size:20px; font-weight:800; margin-bottom:20px;">🏆 Conquistas</h2>
+        <div class="achievements-grid">
+            <div th:each="ach : ${allAchievements}"
+                 class="achievement-card"
+                 th:classappend="${user.achievements.contains(ach['key']) ? 'earned' : 'locked'}">
+                <div class="ach-icon" th:text="${ach['icon']}">🏅</div>
+                <h4 th:text="${ach['title']}">Título</h4>
+                <p th:text="${ach['desc']}">Descrição</p>
+                <div th:if="${user.achievements.contains(ach['key'])}"
+                     style="margin-top:8px; font-size:12px; color:#58CC02; font-weight:700;">
+                    ✓ Conquistada!
+                </div>
+                <div th:unless="${user.achievements.contains(ach['key'])}"
+                     style="margin-top:8px; font-size:12px; color:#AFAFAF;">
+                    🔒 Bloqueada
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:24px;">
+        <a href="/dashboard" class="btn btn-outline">← Voltar ao Dashboard</a>
+        <a href="/leaderboard" class="btn btn-primary" style="margin-left:12px;">🏆 Ver Ranking</a>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <span class="mascot">☕</span>
+            <h1>JavaDuolingo</h1>
+            <p>Aprenda Java do jeito certo, do zero ao júnior!</p>
+        </div>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+        <form th:action="@{/auth/login}" method="post">
+            <div class="form-group">
+                <label class="form-label">Usuário</label>
+                <input type="text" name="username" class="form-input" placeholder="Seu usuário" required autofocus>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Senha</label>
+                <input type="password" name="password" class="form-input" placeholder="Sua senha" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
+                Entrar 🚀
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Não tem conta? <a href="/auth/register">Criar conta grátis</a>
+        </div>
+
+        <div style="margin-top:24px; padding:16px; background:#F7F7F7; border-radius:12px; font-size:13px; color:#666;">
+            <strong>Demo:</strong> Crie uma conta para começar!<br>
+            O progresso é salvo enquanto a sessão durar.
+        </div>
+    </div>
+</div>
+</body>
+</html>

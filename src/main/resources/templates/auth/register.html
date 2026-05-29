@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <span class="mascot">🤖</span>
+            <h1>Criar Conta</h1>
+            <p>Comece sua jornada Java hoje!</p>
+        </div>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <form th:action="@{/auth/register}" method="post">
+            <div class="form-group">
+                <label class="form-label">Usuário</label>
+                <input type="text" name="username" class="form-input" placeholder="Escolha um usuário" required minlength="3" maxlength="50" autofocus>
+            </div>
+            <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <input type="email" name="email" class="form-input" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Senha</label>
+                <input type="password" name="password" class="form-input" placeholder="Mínimo 6 caracteres" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirmar Senha</label>
+                <input type="password" name="confirmPassword" class="form-input" placeholder="Repita a senha" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
+                Criar Conta Grátis 🎉
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Já tem conta? <a href="/auth/login">Fazer login</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

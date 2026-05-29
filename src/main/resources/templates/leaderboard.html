@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div class="leaderboard-container">
+    <div style="text-align:center; margin-bottom:32px;">
+        <h1 style="font-size:32px; font-weight:800;">🏆 Ranking</h1>
+        <p style="color:#AFAFAF; margin-top:8px;">Os melhores estudantes de Java</p>
+    </div>
+
+    <div th:each="u, stat : ${topUsers}">
+        <div class="leaderboard-item" th:classappend="${u.username == user.username ? 'me' : ''}">
+            <div class="rank"
+                 th:classappend="${stat.index == 0 ? 'gold' : (stat.index == 1 ? 'silver' : (stat.index == 2 ? 'bronze' : ''))}"
+                 th:text="${stat.index == 0 ? '🥇' : (stat.index == 1 ? '🥈' : (stat.index == 2 ? '🥉' : '#' + (stat.index + 1)))}">
+                #1
+            </div>
+            <div class="avatar" style="width:44px;height:44px;font-size:20px;"
+                 th:style="'width:44px;height:44px;font-size:20px;background:' + ${u.avatarColor}"
+                 th:text="${#strings.substring(u.username, 0, 1).toUpperCase()}">U</div>
+            <div class="leaderboard-user">
+                <h3 th:text="${u.username}">Username</h3>
+                <p th:text="'Nível ' + ${u.level} + ' • ' + ${u.streakDays} + ' dias de sequência'">Nível 1</p>
+            </div>
+            <div class="leaderboard-xp" th:text="${u.xp + ' XP'}">0 XP</div>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:24px;">
+        <a href="/dashboard" class="btn btn-outline">← Voltar ao Dashboard</a>
+    </div>
+</div>
+
+</body>
+</html>

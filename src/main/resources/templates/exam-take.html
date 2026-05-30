@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${exam.title + ' — JavaDuolingo'}">Prova</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body class="page-lesson">
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<!-- Timer bar -->
+<div class="exam-timer">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;" th:text="${exam.icon}">📋</span>
+        <span style="font-weight:700; font-size:15px;" th:text="${exam.title}">Prova</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <span style="font-size:13px; color:var(--gray-400);">⏱ Tempo restante</span>
+        <div class="timer-display" id="timer">--:--</div>
+    </div>
+</div>
+
+<div class="exam-wrapper">
+
+    <form th:action="'/exam/' + ${exam.id} + '/submit'" method="post" id="exam-form">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <!-- Progress indicator -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+            <span style="font-size:14px; color:var(--gray-400);">
+                <span th:text="${#lists.size(questions)}">10</span> questões •
+                <span th:text="${exam.passingScore}">70</span>% para passar
+            </span>
+            <span id="answered-count" style="font-size:14px; font-weight:700; color:var(--green);">0/<span th:text="${#lists.size(questions)}">10</span> respondidas</span>
+        </div>
+
+        <!-- Questions -->
+        <div th:each="q, qStat : ${questions}" class="exam-question-card">
+            <div class="exam-question-number">Questão <span th:text="${qStat.index + 1}">1</span></div>
+            <div class="exam-question-text" th:text="${q.questionText}">Pergunta</div>
+
+            <pre th:if="${q.codeSnippet != null and !#strings.isEmpty(q.codeSnippet)}"
+                 class="code-snippet" th:text="${q.codeSnippet}"></pre>
+
+            <div class="exam-options">
+                <label th:each="opt : ${optionsMap.get(q.id)}" class="exam-option">
+                    <input type="radio"
+                           th:name="'q_' + ${q.id}"
+                           th:value="${opt}"
+                           onchange="updateAnsweredCount()" />
+                    <span th:text="${opt}">Opção</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div style="text-align:center; margin-top:32px; margin-bottom:40px;">
+            <button type="submit" class="btn btn-primary btn-lg" id="submit-btn"
+                    onclick="return confirmSubmit()">
+                ✓ Finalizar Prova
+            </button>
+            <p style="font-size:13px; color:var(--gray-400); margin-top:12px;">
+                Certifique-se de responder todas as questões antes de finalizar.
+            </p>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+    const TIME_LIMIT = /*[[${exam.timeLimitMinutes}]]*/ 30;
+    const TOTAL = /*[[${#lists.size(questions)}]]*/ 10;
+    let timeLeft = TIME_LIMIT * 60;
+
+    const timerEl = document.getElementById('timer');
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            timerEl.textContent = '00:00';
+            document.getElementById('exam-form').submit();
+            return;
+        }
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        timerEl.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        if (timeLeft <= 60) timerEl.classList.add('warning');
+        else timerEl.classList.remove('warning');
+        timeLeft--;
+    }
+
+    updateTimer();
+    setInterval(updateTimer, 1000);
+
+    function updateAnsweredCount() {
+        const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+        const names = new Set(Array.from(document.querySelectorAll('input[type="radio"]')).map(r => r.name));
+        document.getElementById('answered-count').innerHTML =
+            answered + '/' + names.size + ' respondidas';
+    }
+
+    function confirmSubmit() {
+        const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+        const names = new Set(Array.from(document.querySelectorAll('input[type="radio"]')).map(r => r.name));
+        if (answered < names.size) {
+            return confirm('Você respondeu ' + answered + ' de ' + names.size + ' questões. Deseja finalizar mesmo assim?');
+        }
+        return true;
+    }
+</script>
+</body>
+</html>

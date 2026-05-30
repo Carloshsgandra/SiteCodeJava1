@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div class="exam-wrapper">
+
+    <!-- Score header -->
+    <div class="exam-result-header" th:classappend="${attempt.passed ? 'passed' : 'failed'}">
+        <div style="font-size:48px; margin-bottom:8px;"
+             th:text="${attempt.passed ? '🎉' : '📚'}">🎉</div>
+        <div class="result-score" th:classappend="${attempt.passed ? 'passed' : 'failed'}"
+             th:text="${attempt.score + '%'}">0%</div>
+        <div style="margin-top:8px; font-size:15px; color:var(--gray-700);"
+             th:text="${exam.title}">Prova</div>
+        <div class="result-badge" th:classappend="${attempt.passed ? 'passed' : 'failed'}"
+             th:text="${attempt.passed ? '✓ APROVADO' : '✗ REPROVADO'}">APROVADO</div>
+
+        <div style="display:flex; justify-content:center; gap:32px; margin-top:24px; flex-wrap:wrap;">
+            <div style="text-align:center;">
+                <div style="font-size:24px; font-weight:800; color:var(--green);"
+                     th:text="${attempt.correctAnswers}">0</div>
+                <div style="font-size:13px; color:var(--gray-400);">Corretas</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:24px; font-weight:800; color:var(--red);"
+                     th:text="${attempt.totalQuestions - attempt.correctAnswers}">0</div>
+                <div style="font-size:13px; color:var(--gray-400);">Erradas</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:24px; font-weight:800;"
+                     th:text="${attempt.totalQuestions}">10</div>
+                <div style="font-size:13px; color:var(--gray-400);">Total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex; gap:12px; justify-content:center; margin-bottom:32px; flex-wrap:wrap;">
+        <a th:href="'/exam/' + ${exam.id} + '/take'" class="btn btn-primary">🔄 Tentar Novamente</a>
+        <a href="/dashboard" class="btn btn-outline">🏠 Voltar ao Dashboard</a>
+    </div>
+
+    <!-- Question review -->
+    <div class="card" style="margin-bottom:24px;">
+        <h2 style="font-size:18px; font-weight:800; margin-bottom:20px;">📋 Revisão das Questões</h2>
+
+        <div th:each="q, qStat : ${questions}">
+            <th:block th:with="submitted=${submittedAnswers.get(q.id.toString())},
+                                isCorrect=${submitted != null and #strings.equalsIgnoreCase(submitted, q.correctAnswer)}">
+                <div class="result-question-card" th:classappend="${isCorrect ? 'correct' : 'wrong'}">
+
+                    <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;">
+                        <span style="font-size:18px;" th:text="${isCorrect ? '✅' : '❌'}">✅</span>
+                        <div>
+                            <div style="font-size:12px; font-weight:700; color:var(--gray-400); margin-bottom:4px;"
+                                 th:text="'QUESTÃO ' + ${qStat.index + 1}"></div>
+                            <div class="result-question-text" th:text="${q.questionText}">Pergunta</div>
+                        </div>
+                    </div>
+
+                    <pre th:if="${q.codeSnippet != null and !#strings.isEmpty(q.codeSnippet)}"
+                         style="background:#1F1F1F; color:#58CC02; border-radius:8px; padding:12px 16px; font-size:13px; margin-bottom:12px; overflow-x:auto;"
+                         th:text="${q.codeSnippet}"></pre>
+
+                    <div class="result-answer-row" th:if="${!isCorrect and submitted != null}">
+                        <span class="result-label">Sua resposta:</span>
+                        <span class="result-wrong-answer" th:text="${submitted}">resposta</span>
+                    </div>
+                    <div class="result-answer-row" th:if="${submitted == null or submitted.isEmpty()}">
+                        <span class="result-label">Sua resposta:</span>
+                        <span style="color:var(--gray-400); font-style:italic;">Não respondida</span>
+                    </div>
+                    <div class="result-answer-row">
+                        <span class="result-label">Resposta:</span>
+                        <span class="result-correct-answer" th:text="${q.correctAnswer}">correta</span>
+                    </div>
+
+                    <div class="result-explanation" th:if="${q.explanation != null and !#strings.isEmpty(q.explanation)}"
+                         th:text="${q.explanation}">Explicação</div>
+                </div>
+            </th:block>
+        </div>
+    </div>
+
+    <!-- Bottom actions -->
+    <div style="text-align:center; margin-bottom:40px;">
+        <a th:href="'/exam/' + ${exam.id}" class="btn btn-outline">← Voltar para a prova</a>
+    </div>
+</div>
+
+</body>
+</html>

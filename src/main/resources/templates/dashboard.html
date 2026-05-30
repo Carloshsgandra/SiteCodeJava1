@@ -63,6 +63,42 @@
                     </th:block>
                 </div>
             </div>
+            <!-- Exams Section -->
+            <div class="card" style="margin-bottom:24px;" th:if="${!exams.empty}">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+                    <h2 style="font-size:18px; font-weight:800;">📋 Provas</h2>
+                    <span style="font-size:13px; color:var(--gray-400);">Teste seus conhecimentos</span>
+                </div>
+                <div class="exams-grid">
+                    <th:block th:each="exam : ${exams}">
+                        <th:block th:with="attempt=${bestAttempts[exam.id]}">
+                            <a th:href="'/exam/' + ${exam.id}"
+                               class="exam-card-link"
+                               th:classappend="${attempt != null and attempt.passed} ? ' passed' : ''">
+                                <div class="exam-icon" th:text="${exam.icon}">📋</div>
+                                <div class="exam-info">
+                                    <h3 th:text="${exam.title}">Prova</h3>
+                                    <p th:text="${exam.description}">Descrição</p>
+                                    <div class="exam-meta">
+                                        <span th:text="'⏱ ' + ${exam.timeLimitMinutes} + ' min'">⏱ 30 min</span>
+                                        <span th:text="'✓ ' + ${exam.passingScore} + '% para passar'">✓ 70%</span>
+                                    </div>
+                                </div>
+                                <div class="exam-score" th:if="${attempt != null}">
+                                    <div class="score-circle"
+                                         th:classappend="${attempt.passed} ? ' passed' : ' failed'"
+                                         th:text="${attempt.score + '%'}">0%</div>
+                                    <span th:text="${attempt.passed} ? 'Aprovado' : 'Reprovado'"
+                                          th:style="${attempt.passed} ? 'color:var(--green);font-size:12px;font-weight:700' : 'color:var(--red);font-size:12px;font-weight:700'"></span>
+                                </div>
+                                <div class="exam-score" th:unless="${attempt != null}">
+                                    <div class="btn btn-primary btn-sm">Iniciar</div>
+                                </div>
+                            </a>
+                        </th:block>
+                    </th:block>
+                </div>
+            </div>
         </main>
 
         <!-- SIDEBAR -->

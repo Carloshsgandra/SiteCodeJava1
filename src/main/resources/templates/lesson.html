@@ -270,14 +270,29 @@
             100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
+            .lesson-wrapper { padding: 16px 12px; }
+            .lesson-progress-header { gap: 8px; margin-bottom: 20px; }
+            #hearts-display { font-size: 16px; gap: 2px; }
+            .exercise-card { padding: 20px 16px; border-radius: 16px; }
+            .exercise-question { font-size: 18px; }
             .options-grid { grid-template-columns: 1fr; }
             .tf-grid { grid-template-columns: 1fr; }
-            .exercise-question { font-size: 18px; }
+            .option-btn { padding: 14px 16px; }
+            .code-snippet { font-size: 13px; padding: 14px 16px; }
+            .order-token { padding: 10px 14px; font-size: 13px; touch-action: none; }
+            .order-token.selected { outline: 3px solid var(--blue); box-shadow: 0 0 0 3px rgba(28,176,246,0.3); }
+            .feedback-bar { padding: 16px 20px; flex-wrap: wrap; gap: 10px; }
+            .feedback-icon { font-size: 28px; }
+            .feedback-content h3 { font-size: 16px; }
+        }
+        @media (max-width: 480px) {
+            #progress-text { display: none; }
+            .lesson-progress-header { margin-bottom: 14px; }
         }
     </style>
 </head>
-<body>
+<body class="page-lesson">
 
 <div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
 

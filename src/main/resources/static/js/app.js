@@ -111,14 +111,50 @@ const ExerciseEngine = (() => {
         const drop = document.getElementById('order-drop');
         if (!bank || !drop) return;
 
+        const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
         let draggedEl = null;
+        let selectedToken = null;
 
         document.querySelectorAll('.order-token').forEach(token => {
+            // Desktop drag-and-drop
             token.addEventListener('dragstart', e => {
                 draggedEl = token;
                 token.classList.add('dragging');
             });
             token.addEventListener('dragend', () => token.classList.remove('dragging'));
+
+            // Mobile tap-to-place
+            token.addEventListener('click', () => {
+                if (!isTouchDevice() && !('ontouchstart' in window)) return;
+                if (selectedToken === token) {
+                    token.classList.remove('selected');
+                    selectedToken = null;
+                    return;
+                }
+                if (selectedToken) selectedToken.classList.remove('selected');
+                selectedToken = token;
+                token.classList.add('selected');
+
+                // If token is in bank, move to drop zone on tap
+                if (bank.contains(token)) {
+                    const hint = drop.querySelector('.drop-hint');
+                    if (hint) hint.remove();
+                    drop.appendChild(token);
+                    token.classList.remove('selected');
+                    selectedToken = null;
+                }
+            });
+        });
+
+        // Drop zone tap: move selected back to bank
+        drop.addEventListener('click', e => {
+            if (!isTouchDevice() && !('ontouchstart' in window)) return;
+            const token = e.target.closest('.order-token');
+            if (token) {
+                bank.appendChild(token);
+                if (selectedToken) selectedToken.classList.remove('selected');
+                selectedToken = null;
+            }
         });
 
         [bank, drop].forEach(zone => {

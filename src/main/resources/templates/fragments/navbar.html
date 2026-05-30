@@ -24,7 +24,10 @@
     </div>
 
     <div class="navbar-user">
-        <a href="/chat" class="navbar-chat-btn" title="JavaBot">💬</a>
+        <a href="/daily"       class="navbar-chat-btn" title="Desafio Diário">📅</a>
+        <a href="/flashcards"  class="navbar-chat-btn" title="Flashcards">🃏</a>
+        <a href="/playground"  class="navbar-chat-btn" title="Playground">⌨️</a>
+        <a href="/chat"        class="navbar-chat-btn" title="JavaBot">💬</a>
         <a href="/profile" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
             <div class="avatar" th:style="'background:' + ${user.avatarColor}"
                  th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}">U</div>
@@ -44,13 +47,13 @@
             <span class="nav-icon">🏠</span>
             <span>Início</span>
         </a>
-        <a href="/chat" class="bottom-nav-item" data-path="/chat">
-            <span class="nav-icon">💬</span>
-            <span>JavaBot</span>
+        <a href="/daily" class="bottom-nav-item" data-path="/daily">
+            <span class="nav-icon">📅</span>
+            <span>Diário</span>
         </a>
-        <a href="/leaderboard" class="bottom-nav-item" data-path="/leaderboard">
-            <span class="nav-icon">🏆</span>
-            <span>Ranking</span>
+        <a href="/playground" class="bottom-nav-item" data-path="/playground">
+            <span class="nav-icon">⌨️</span>
+            <span>Editor</span>
         </a>
         <a href="/profile" class="bottom-nav-item" data-path="/profile">
             <span class="nav-icon">👤</span>

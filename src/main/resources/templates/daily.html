@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio Diário — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div style="max-width:700px;margin:32px auto;padding:0 16px;">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:32px;">
+        <div style="font-size:56px;">📅</div>
+        <h1 style="font-size:26px;font-weight:800;margin-top:8px;">Desafio Diário</h1>
+        <p style="color:var(--gray-400);margin-top:6px;">Um novo desafio todo dia • <strong th:text="${totalCorrect}">0</strong> dias corretos no total</p>
+    </div>
+
+    <!-- Already completed -->
+    <div th:if="${attempt != null}" class="card" style="text-align:center;padding:40px;">
+        <div style="font-size:48px;" th:text="${attempt.correct} ? '🎉' : '📚'">🎉</div>
+        <h2 style="font-size:22px;font-weight:800;margin-top:12px;"
+            th:text="${attempt.correct} ? 'Você acertou hoje!' : 'Você tentou hoje!'">Resultado</h2>
+        <p style="color:var(--gray-400);margin-top:8px;">Volte amanhã para um novo desafio!</p>
+        <div style="margin-top:24px;padding:16px;background:var(--gray-100);border-radius:12px;font-size:14px;color:var(--gray-700);">
+            <strong>Resposta correta:</strong>
+            <span th:text="${exercise != null ? exercise.correctAnswer : ''}"></span>
+        </div>
+        <div th:if="${exercise != null and exercise.explanation != null}"
+             style="margin-top:12px;padding:14px;background:#F0FAFF;border-radius:12px;font-size:13px;color:var(--gray-700);text-align:left;"
+             th:text="${exercise.explanation}"></div>
+        <a href="/dashboard" class="btn btn-primary" style="margin-top:24px;">🏠 Voltar ao Dashboard</a>
+    </div>
+
+    <!-- Challenge -->
+    <div th:if="${attempt == null and exercise != null}" class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+            <span style="background:var(--orange);color:white;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;">+50 XP se acertar</span>
+            <span style="background:#F7F7F7;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;color:var(--gray-400);">+10 XP se errar</span>
+        </div>
+
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;" th:text="${exercise.questionText}">Pergunta</h2>
+
+        <pre th:if="${exercise.codeSnippet != null and !#strings.isEmpty(exercise.codeSnippet)}"
+             style="background:#1F1F1F;color:#58CC02;border-radius:12px;padding:16px 20px;font-size:13px;margin-bottom:20px;overflow-x:auto;"
+             th:text="${exercise.codeSnippet}"></pre>
+
+        <div id="options-container" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+            <button th:each="opt : ${options}"
+                    class="daily-option"
+                    th:text="${opt}"
+                    th:attr="data-value=${opt}"
+                    onclick="selectOption(this)"></button>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="submit-btn" onclick="submitDaily()" disabled>
+            Confirmar Resposta
+        </button>
+    </div>
+
+    <!-- No exercise -->
+    <div th:if="${exercise == null}" class="card" style="text-align:center;padding:40px;">
+        <div style="font-size:48px;">😴</div>
+        <p style="margin-top:16px;color:var(--gray-400);">Nenhum desafio disponível no momento.</p>
+        <a href="/dashboard" class="btn btn-outline" style="margin-top:16px;">← Voltar</a>
+    </div>
+
+    <!-- Result (shown after submit) -->
+    <div id="result-box" style="display:none;" class="card" style="text-align:center;padding:32px;margin-top:16px;">
+        <div id="result-icon" style="font-size:48px;">🎉</div>
+        <h2 id="result-title" style="font-size:20px;font-weight:800;margin:12px 0;"></h2>
+        <div id="result-xp" style="font-size:24px;font-weight:800;color:var(--green);"></div>
+        <div id="result-answer" style="margin-top:16px;padding:14px;background:var(--gray-100);border-radius:12px;font-size:14px;"></div>
+        <div id="result-explanation" style="margin-top:12px;padding:14px;background:#F0FAFF;border-radius:12px;font-size:13px;color:var(--gray-700);display:none;"></div>
+        <a href="/dashboard" class="btn btn-primary" style="margin-top:20px;">🏠 Voltar ao Dashboard</a>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const EXERCISE_ID = /*[[${exercise != null ? exercise.id : 0}]]*/ 0;
+    let selected = null;
+
+    function selectOption(btn) {
+        document.querySelectorAll('.daily-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selected = btn.dataset.value;
+        document.getElementById('submit-btn').disabled = false;
+    }
+
+    function submitDaily() {
+        if (!selected) return;
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('submit-btn').textContent = 'Verificando...';
+
+        fetch('/api/daily/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ exerciseId: String(EXERCISE_ID), answer: selected })
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('options-container').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+            const box = document.getElementById('result-box');
+            box.style.display = 'block';
+            document.getElementById('result-icon').textContent = data.correct ? '🎉' : '📚';
+            document.getElementById('result-title').textContent = data.correct ? 'Resposta Correta!' : 'Não foi dessa vez!';
+            document.getElementById('result-xp').textContent = '+' + data.bonusXp + ' XP';
+            document.getElementById('result-answer').innerHTML = '<strong>Resposta correta:</strong> ' + data.correctAnswer;
+            if (data.explanation) {
+                const exp = document.getElementById('result-explanation');
+                exp.style.display = 'block';
+                exp.textContent = data.explanation;
+            }
+        })
+        .catch(() => {
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('submit-btn').textContent = 'Confirmar Resposta';
+        });
+    }
+</script>
+</body>
+</html>

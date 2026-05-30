@@ -1,6 +1,9 @@
 package com.javaduolingo.controller;
 
+import com.javaduolingo.model.LearningModule;
 import com.javaduolingo.model.User;
+import com.javaduolingo.service.DailyService;
+import com.javaduolingo.service.LessonService;
 import com.javaduolingo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +19,8 @@ import java.util.*;
 public class ProfileController {
 
     private final UserService userService;
+    private final LessonService lessonService;
+    private final DailyService dailyService;
 
     @GetMapping("/profile")
     public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -30,10 +35,25 @@ public class ProfileController {
             Map.of("key", "STREAK_30", "title", "Mês de Dedicação",    "desc", "30 dias seguidos",  "icon", "⚡")
         );
 
+        // Chart data: module completion
+        List<LearningModule> modules = lessonService.getAllModules();
+        Set<Long> completedIds = lessonService.getCompletedLessonIds(user.getId());
+        List<String> moduleLabels = new ArrayList<>();
+        List<Integer> modulePcts = new ArrayList<>();
+        for (LearningModule m : modules) {
+            moduleLabels.add(m.getTitle());
+            int total = m.getLessons().size();
+            long done = m.getLessons().stream().filter(l -> completedIds.contains(l.getId())).count();
+            modulePcts.add(total > 0 ? (int)(done * 100 / total) : 0);
+        }
+
         model.addAttribute("user", user);
         model.addAttribute("allAchievements", allAchievements);
         model.addAttribute("xpToNextLevel", 100 - (user.getXp() % 100));
         model.addAttribute("levelProgress", user.getXp() % 100);
+        model.addAttribute("moduleLabels", moduleLabels);
+        model.addAttribute("modulePcts", modulePcts);
+        model.addAttribute("totalDailiesCorrect", dailyService.getTotalCorrect(user.getId()));
         return "profile";
     }
 

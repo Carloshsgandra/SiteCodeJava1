@@ -536,6 +536,29 @@ body {
   30% { transform: translateY(-6px); opacity: 1; }
 }
 
+/* ===== DAILY WIDGET ===== */
+.daily-widget-link { text-decoration:none; display:block; margin-bottom:20px; }
+.daily-widget {
+  display:flex; align-items:center; gap:16px;
+  padding:16px 20px;
+  background:linear-gradient(135deg,#FFF9E6,#FFF3CC);
+  border:2px solid var(--yellow);
+  border-radius:14px;
+  transition:transform .15s, box-shadow .15s;
+}
+.daily-widget:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(255,217,0,.3); }
+
+/* ===== DAILY OPTION BUTTONS ===== */
+.daily-option {
+  width:100%; padding:14px 18px;
+  border:2px solid var(--gray-200); border-radius:12px;
+  background:white; cursor:pointer;
+  font-size:15px; font-family:inherit; font-weight:600;
+  text-align:left; transition:all .15s;
+}
+.daily-option:hover { border-color:var(--blue); background:#F0FAFF; }
+.daily-option.selected { border-color:var(--blue); background:#F0FAFF; }
+
 /* ===== EXAMS ===== */
 .exams-grid { display: flex; flex-direction: column; gap: 10px; }
 

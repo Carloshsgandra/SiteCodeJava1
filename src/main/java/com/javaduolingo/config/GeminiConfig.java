@@ -8,14 +8,18 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class GeminiConfig {
 
-    @Value("${gemini.api.url}")
-    private String geminiUrl;
+    @Value("${groq.api.url}")
+    private String groqUrl;
+
+    @Value("${groq.api.key:}")
+    private String groqApiKey;
 
     @Bean
     public RestClient geminiRestClient() {
         return RestClient.builder()
-                .baseUrl(geminiUrl)
+                .baseUrl(groqUrl)
                 .defaultHeader("Content-Type", "application/json")
+                .defaultHeader("Authorization", "Bearer " + groqApiKey)
                 .build();
     }
 }

@@ -19,8 +19,11 @@ public class GeminiService {
 
     private final RestClient geminiRestClient;
 
-    @Value("${gemini.api.key}")
+    @Value("${groq.api.key:}")
     private String apiKey;
+
+    @Value("${groq.api.model:llama-3.3-70b-versatile}")
+    private String model;
 
     private final AtomicLong lastCallTime = new AtomicLong(0);
     private static final long MIN_INTERVAL_MS = 2000;
@@ -55,7 +58,6 @@ public class GeminiService {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> response = geminiRestClient.post()
-                    .uri("?key=" + apiKey)
                     .body(body)
                     .retrieve()
                     .body(Map.class);
@@ -68,7 +70,7 @@ public class GeminiService {
     }
 
     private String buildPrompt(String question, String wrongAnswer, String context) {
-        StringBuilder sb = new StringBuilder(SYSTEM_PROMPT).append("\n\n");
+        StringBuilder sb = new StringBuilder();
         if (context != null) {
             sb.append("Exercício: ").append(context).append("\n");
         }
@@ -81,19 +83,13 @@ public class GeminiService {
     }
 
     private Map<String, Object> buildRequestBody(String prompt) {
-        Map<String, Object> text = new HashMap<>();
-        text.put("text", prompt);
-
-        Map<String, Object> part = new HashMap<>();
-        part.put("parts", List.of(text));
-        part.put("role", "user");
-
         Map<String, Object> body = new HashMap<>();
-        body.put("contents", List.of(part));
-        body.put("generationConfig", Map.of(
-                "temperature", 0.7,
-                "maxOutputTokens", 512,
-                "topP", 0.9));
+        body.put("model", model);
+        body.put("messages", List.of(
+                Map.of("role", "system", "content", SYSTEM_PROMPT),
+                Map.of("role", "user", "content", prompt)));
+        body.put("max_tokens", 512);
+        body.put("temperature", 0.7);
         return body;
     }
 
@@ -101,21 +97,18 @@ public class GeminiService {
     private String extractText(Map<String, Object> response) {
         if (response == null)
             return getFallbackResponse("null response");
-        var candidates = (List<Map<String, Object>>) response.get("candidates");
-        if (candidates == null || candidates.isEmpty())
-            return getFallbackResponse("no candidates");
-        var content = (Map<String, Object>) candidates.get(0).get("content");
-        if (content == null)
-            return getFallbackResponse("no content");
-        var parts = (List<Map<String, Object>>) content.get("parts");
-        if (parts == null || parts.isEmpty())
-            return getFallbackResponse("no parts");
-        return String.valueOf(parts.get(0).get("text"));
+        var choices = (List<Map<String, Object>>) response.get("choices");
+        if (choices == null || choices.isEmpty())
+            return getFallbackResponse("no choices");
+        var message = (Map<String, Object>) choices.get(0).get("message");
+        if (message == null)
+            return getFallbackResponse("no message");
+        return String.valueOf(message.get("content"));
     }
 
     private String getFallbackResponse(String topic) {
         return "Desculpe, estou com dificuldades para conectar ao servidor agora. " +
                 "Tente revisar a documentação oficial do Java ou a lição novamente. " +
-                "Configure sua GEMINI_API_KEY para habilitar respostas personalizadas!";
+                "Configure sua GROQ_API_KEY para habilitar respostas personalizadas!";
     }
 }

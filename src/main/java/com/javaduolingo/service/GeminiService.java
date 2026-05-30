@@ -1,13 +1,16 @@
 package com.javaduolingo.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -22,18 +25,22 @@ public class GeminiService {
     private final AtomicLong lastCallTime = new AtomicLong(0);
     private static final long MIN_INTERVAL_MS = 2000;
 
-    private static final String SYSTEM_PROMPT =
-        "Você é JavaBot, um professor virtual amigável e paciente especializado em ensinar Java. " +
-        "Responda sempre em português brasileiro, de forma clara e concisa. " +
-        "Use exemplos de código quando necessário. " +
-        "Adapte suas explicações para iniciantes e desenvolvedores júnior. " +
-        "Seja encorajador e positivo.";
+    private static final String SYSTEM_PROMPT = "Você é JavaBot, um professor virtual amigável e paciente especializado em ensinar Java. "
+            +
+            "Responda sempre em português brasileiro, de forma clara e concisa. " +
+            "Use exemplos de código quando necessário. " +
+            "Adapte suas explicações para iniciantes e desenvolvedores júnior. " +
+            "Seja encorajador e positivo.";
 
     public String askJavaBot(String question) {
         return askJavaBot(question, null, null);
     }
 
     public String askJavaBot(String question, String wrongAnswer, String exerciseContext) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return getFallbackResponse(question);
+        }
+
         // Simple rate limiting
         long now = System.currentTimeMillis();
         long last = lastCallTime.get();
@@ -86,26 +93,29 @@ public class GeminiService {
         body.put("generationConfig", Map.of(
                 "temperature", 0.7,
                 "maxOutputTokens", 512,
-                "topP", 0.9
-        ));
+                "topP", 0.9));
         return body;
     }
 
     @SuppressWarnings("unchecked")
     private String extractText(Map<String, Object> response) {
-        if (response == null) return getFallbackResponse("null response");
+        if (response == null)
+            return getFallbackResponse("null response");
         var candidates = (List<Map<String, Object>>) response.get("candidates");
-        if (candidates == null || candidates.isEmpty()) return getFallbackResponse("no candidates");
+        if (candidates == null || candidates.isEmpty())
+            return getFallbackResponse("no candidates");
         var content = (Map<String, Object>) candidates.get(0).get("content");
-        if (content == null) return getFallbackResponse("no content");
+        if (content == null)
+            return getFallbackResponse("no content");
         var parts = (List<Map<String, Object>>) content.get("parts");
-        if (parts == null || parts.isEmpty()) return getFallbackResponse("no parts");
+        if (parts == null || parts.isEmpty())
+            return getFallbackResponse("no parts");
         return String.valueOf(parts.get(0).get("text"));
     }
 
     private String getFallbackResponse(String topic) {
         return "Desculpe, estou com dificuldades para conectar ao servidor agora. " +
-               "Tente revisar a documentação oficial do Java ou a lição novamente. " +
-               "Configure sua GEMINI_API_KEY para habilitar respostas personalizadas!";
+                "Tente revisar a documentação oficial do Java ou a lição novamente. " +
+                "Configure sua GEMINI_API_KEY para habilitar respostas personalizadas!";
     }
 }

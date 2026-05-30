@@ -32,7 +32,9 @@ const ExerciseEngine = (() => {
         html += `<h2 class="exercise-question">${escapeHtml(ex.question)}</h2>`;
 
         if (ex.codeSnippet) {
-            html += `<pre class="code-snippet"><code>${escapeHtml(ex.codeSnippet)}</code></pre>`;
+            html += `<pre class="code-snippet" id="snippet-${ex.id}"><code>${escapeHtml(ex.codeSnippet)}</code></pre>`;
+            html += `<button class="btn-run-code" onclick="runCode(${ex.id}, this)">▶ Executar Código</button>`;
+            html += `<div class="code-output" id="output-${ex.id}" style="display:none;"></div>`;
         }
 
         html += renderAnswerArea(ex);
@@ -419,6 +421,39 @@ const ExerciseEngine = (() => {
 
     return { init, checkAnswer, selectOption, selectBlankOption, askJavaBot };
 })();
+
+// ===== Code Execution (Piston API) =====
+function runCode(exId, btn) {
+    const snippetEl = document.getElementById('snippet-' + exId);
+    const outputEl  = document.getElementById('output-'  + exId);
+    if (!snippetEl || !outputEl) return;
+
+    const code = snippetEl.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Executando...';
+    outputEl.style.display = 'block';
+    outputEl.className = 'code-output loading';
+    outputEl.textContent = 'Compilando e executando...';
+
+    fetch('/api/code/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        outputEl.className = 'code-output ' + (data.type || 'success');
+        outputEl.textContent = data.output || '(sem saída)';
+        btn.disabled = false;
+        btn.textContent = '▶ Executar Código';
+    })
+    .catch(() => {
+        outputEl.className = 'code-output error';
+        outputEl.textContent = 'Erro ao conectar ao servidor de execução.';
+        btn.disabled = false;
+        btn.textContent = '▶ Executar Código';
+    });
+}
 
 // ===== JavaBot Chat Widget =====
 function sendJavaBotMessage() {

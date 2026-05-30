@@ -400,6 +400,43 @@ body {
 .achievement-card p { font-size: 12px; color: var(--gray-400); }
 .achievement-card.locked { opacity: 0.5; filter: grayscale(0.8); }
 
+/* ===== CODE EXECUTION ===== */
+.btn-run-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1F1F1F;
+  color: #58CC02;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: opacity 0.15s;
+  font-family: 'Courier New', monospace;
+}
+.btn-run-code:hover { opacity: 0.85; }
+.btn-run-code:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.code-output {
+  background: #0D0D0D;
+  color: #E0E0E0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-left: 4px solid #333;
+}
+.code-output.success { border-left-color: var(--green); }
+.code-output.error   { border-left-color: var(--red); color: #FF8080; }
+.code-output.loading { border-left-color: var(--blue); color: var(--gray-400); }
+
 /* ===== CHAT PAGE ===== */
 .chat-page {
   display: flex;

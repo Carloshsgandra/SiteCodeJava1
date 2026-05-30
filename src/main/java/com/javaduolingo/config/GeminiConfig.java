@@ -22,4 +22,12 @@ public class GeminiConfig {
                 .defaultHeader("Authorization", "Bearer " + groqApiKey)
                 .build();
     }
+
+    @Bean
+    public RestClient pistonRestClient() {
+        return RestClient.builder()
+                .baseUrl("https://emkc.org/api/v2/piston")
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+    }
 }

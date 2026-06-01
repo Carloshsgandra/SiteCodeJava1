@@ -54,30 +54,30 @@ public class User {
     @Version
     private Long version;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "integer default 0")
     @Builder.Default
     private int weeklyXp = 0;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "integer default 200")
     @Builder.Default
     private int weeklyGoalXp = 200;
 
     @Column
     private LocalDate weekStartDate;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "integer default 0")
     @Builder.Default
     private int totalLessonsCompleted = 0;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "integer default 0")
     @Builder.Default
     private int totalPerfectLessons = 0;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "integer default 0")
     @Builder.Default
     private int totalExercisesAttempted = 0;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "integer default 0")
     @Builder.Default
     private int totalExercisesCorrect = 0;
 

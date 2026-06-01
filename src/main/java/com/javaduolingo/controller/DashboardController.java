@@ -20,21 +20,22 @@ public class DashboardController {
     private final LessonService lessonService;
     private final ExamService examService;
     private final ExamAttemptRepository examAttemptRepository;
+    private final MistakeService mistakeService;
+    private final SpacedRepetitionService srService;
 
     @GetMapping({"/", "/dashboard"})
     public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User user = userService.getByUsername(userDetails.getUsername());
         userService.updateStreak(user);
+        user = userService.getByUsername(userDetails.getUsername());
 
         List<LearningModule> modules = lessonService.getAllModules();
         Set<Long> completedIds = lessonService.getCompletedLessonIds(user.getId());
 
-        // Build unlock status for each lesson
         Map<Long, Boolean> unlockedMap = new HashMap<>();
         for (LearningModule mod : modules) {
             for (Lesson lesson : mod.getLessons()) {
-                boolean unlocked = lessonService.isLessonUnlocked(user, lesson, completedIds);
-                unlockedMap.put(lesson.getId(), unlocked);
+                unlockedMap.put(lesson.getId(), lessonService.isLessonUnlocked(user, lesson, completedIds));
             }
         }
 
@@ -49,6 +50,10 @@ public class DashboardController {
                     .ifPresent(a -> bestAttempts.put(exam.getId(), a));
         }
 
+        int weeklyPct = user.getWeeklyGoalXp() > 0
+                ? Math.min(100, user.getWeeklyXp() * 100 / user.getWeeklyGoalXp())
+                : 0;
+
         model.addAttribute("user", user);
         model.addAttribute("modules", modules);
         model.addAttribute("completedIds", completedIds);
@@ -58,6 +63,11 @@ public class DashboardController {
         model.addAttribute("totalLessons", totalLessons);
         model.addAttribute("exams", exams);
         model.addAttribute("bestAttempts", bestAttempts);
+        model.addAttribute("weeklyXp", user.getWeeklyXp());
+        model.addAttribute("weeklyGoalXp", user.getWeeklyGoalXp());
+        model.addAttribute("weeklyPct", weeklyPct);
+        model.addAttribute("mistakeCount", mistakeService.getMistakeCount(user.getId()));
+        model.addAttribute("dueFlashcards", srService.getDueCount(user.getId()));
         return "dashboard";
     }
 }

@@ -7,126 +7,31 @@
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <style>
         .lesson-wrapper { max-width: 760px; margin: 0 auto; padding: 32px 24px; }
-
-        /* Progress header */
-        .lesson-progress-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-        .back-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #AFAFAF;
-            transition: color 0.15s;
-        }
+        .lesson-progress-header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+        .back-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #AFAFAF; transition: color 0.15s; }
         .back-btn:hover { color: #4B4B4B; }
         .progress-bar-container { flex: 1; height: 18px; }
         #progress-text { font-weight: 700; font-size: 15px; color: #AFAFAF; white-space: nowrap; }
-
-        /* Hearts */
         #hearts-display { display: flex; gap: 4px; font-size: 22px; }
 
-        /* Exercise card */
-        .exercise-card {
-            background: white;
-            border: 2px solid #E5E5E5;
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 16px;
-        }
-        .exercise-type-badge {
-            display: inline-block;
-            background: #F7F7F7;
-            color: #AFAFAF;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 999px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .exercise-question {
-            font-size: 22px;
-            font-weight: 700;
-            line-height: 1.4;
-            margin-bottom: 24px;
-            color: #1F1F1F;
-        }
-        .code-snippet {
-            background: #1F1F1F;
-            color: #58CC02;
-            border-radius: 12px;
-            padding: 20px 24px;
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-        }
+        .exercise-card { background: white; border: 2px solid #E5E5E5; border-radius: 20px; padding: 32px; margin-bottom: 16px; }
+        .exercise-type-badge { display: inline-block; background: #F7F7F7; color: #AFAFAF; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .exercise-question { font-size: 22px; font-weight: 700; line-height: 1.4; margin-bottom: 24px; color: #1F1F1F; }
+        .code-snippet { background: #1F1F1F; color: #58CC02; border-radius: 12px; padding: 20px 24px; font-size: 15px; line-height: 1.6; margin-bottom: 24px; overflow-x: auto; font-family: 'Courier New', monospace; }
 
-        /* Options */
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .option-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
-            border: 2px solid #E5E5E5;
-            border-radius: 12px;
-            background: white;
-            cursor: pointer;
-            text-align: left;
-            font-size: 15px;
-            font-family: inherit;
-            transition: all 0.15s;
-        }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .option-btn { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border: 2px solid #E5E5E5; border-radius: 12px; background: white; cursor: pointer; text-align: left; font-size: 15px; font-family: inherit; transition: all 0.15s; }
         .option-btn:hover { border-color: #1CB0F6; background: #F0FAFF; }
         .option-btn.selected { border-color: #1CB0F6; background: #F0FAFF; }
         .option-btn.correct { border-color: #58CC02 !important; background: #D7FFB8 !important; }
         .option-btn.wrong { border-color: #FF4B4B !important; background: #FFF0F0 !important; }
-        .option-key {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: #E5E5E5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
+        .option-key { width: 32px; height: 32px; border-radius: 8px; background: #E5E5E5; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
         .option-btn.selected .option-key { background: #1CB0F6; color: white; }
         .option-btn.correct .option-key { background: #58CC02; color: white; }
         .option-btn.wrong .option-key { background: #FF4B4B; color: white; }
 
-        /* True/False */
         .tf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-        .tf-btn {
-            padding: 24px;
-            border: 2px solid #E5E5E5;
-            border-radius: 12px;
-            background: white;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: 700;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.15s;
-        }
+        .tf-btn { padding: 24px; border: 2px solid #E5E5E5; border-radius: 12px; background: white; cursor: pointer; font-size: 18px; font-weight: 700; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.15s; }
         .tf-btn:hover { border-color: #58CC02; background: #D7FFB8; }
         .tf-btn.selected { border-color: #58CC02; background: #D7FFB8; }
         .tf-btn.tf-false:hover { border-color: #FF4B4B; background: #FFF0F0; }
@@ -135,77 +40,23 @@
         .tf-btn.wrong { border-color: #FF4B4B !important; background: #FFF0F0 !important; }
         .tf-icon { font-size: 24px; }
 
-        /* Fill blank */
         .fill-blank-area { margin-bottom: 24px; }
         .blank-options { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-        .blank-option {
-            padding: 10px 18px;
-            border: 2px solid #E5E5E5;
-            border-radius: 999px;
-            background: white;
-            cursor: pointer;
-            font-size: 15px;
-            font-family: 'Courier New', monospace;
-            font-weight: 700;
-            transition: all 0.15s;
-        }
+        .blank-option { padding: 10px 18px; border: 2px solid #E5E5E5; border-radius: 999px; background: white; cursor: pointer; font-size: 15px; font-family: 'Courier New', monospace; font-weight: 700; transition: all 0.15s; }
         .blank-option:hover { border-color: #1CB0F6; background: #F0FAFF; }
         .blank-option.selected { border-color: #1CB0F6; background: #1CB0F6; color: white; }
         .blank-input { width: 100%; padding: 14px 18px; border: 2px solid #E5E5E5; border-radius: 12px; font-size: 16px; font-family: 'Courier New', monospace; outline: none; transition: border-color 0.15s; }
         .blank-input:focus { border-color: #1CB0F6; }
 
-        /* Code order */
         .code-order-area { margin-bottom: 24px; }
-        .order-bank {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 16px;
-            background: #F7F7F7;
-            border-radius: 12px;
-            min-height: 60px;
-            margin-bottom: 12px;
-        }
-        .order-drop-zone {
-            min-height: 60px;
-            border: 2px dashed #AFAFAF;
-            border-radius: 12px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .order-bank { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px; background: #F7F7F7; border-radius: 12px; min-height: 60px; margin-bottom: 12px; }
+        .order-drop-zone { min-height: 60px; border: 2px dashed #AFAFAF; border-radius: 12px; padding: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
         .order-drop-zone.drag-over { border-color: #58CC02; background: #D7FFB8; }
-        .order-token {
-            padding: 8px 16px;
-            background: #1F1F1F;
-            color: #58CC02;
-            border-radius: 8px;
-            cursor: grab;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            font-weight: 700;
-            user-select: none;
-            transition: opacity 0.15s;
-        }
+        .order-token { padding: 8px 16px; background: #1F1F1F; color: #58CC02; border-radius: 8px; cursor: grab; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; user-select: none; transition: opacity 0.15s; }
         .order-token.dragging { opacity: 0.4; }
         .drop-hint { color: #AFAFAF; font-size: 14px; }
 
-        /* Feedback bar */
-        .feedback-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 32px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 200;
-        }
+        .feedback-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px 32px; display: flex; align-items: center; gap: 16px; transform: translateY(100%); transition: transform 0.3s ease; z-index: 200; }
         .feedback-bar.show { transform: translateY(0); }
         .feedback-bar.correct { background: #D7FFB8; border-top: 3px solid #58CC02; }
         .feedback-bar.wrong { background: #FFF0F0; border-top: 3px solid #FF4B4B; }
@@ -215,24 +66,8 @@
         .feedback-bar.correct h3 { color: #58CC02; }
         .feedback-bar.wrong h3 { color: #FF4B4B; }
 
-        /* Modals */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 300;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-box {
-            background: white;
-            border-radius: 24px;
-            padding: 48px;
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
-        }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: center; justify-content: center; }
+        .modal-box { background: white; border-radius: 24px; padding: 48px; text-align: center; max-width: 420px; width: 90%; }
         .modal-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
         .modal-stars { font-size: 36px; margin: 16px 0; }
         .modal-xp { font-size: 48px; font-weight: 800; color: #58CC02; line-height: 1; }
@@ -242,33 +77,11 @@
         .modal-stat-val { font-size: 24px; font-weight: 800; }
         .modal-stat-label { font-size: 12px; color: #AFAFAF; }
 
-        /* XP particles */
-        .xp-particle {
-            position: fixed;
-            color: #58CC02;
-            font-weight: 800;
-            font-size: 18px;
-            pointer-events: none;
-            animation: floatUp 1.2s ease forwards;
-            z-index: 400;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-80px); opacity: 0; }
-        }
+        .xp-particle { position: fixed; color: #58CC02; font-weight: 800; font-size: 18px; pointer-events: none; animation: floatUp 1.2s ease forwards; z-index: 400; }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } }
 
-        /* Confetti */
-        .confetti-piece {
-            position: fixed;
-            top: -10px;
-            pointer-events: none;
-            animation: confetti 1.5s ease-in forwards;
-            z-index: 500;
-        }
-        @keyframes confetti {
-            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
+        .confetti-piece { position: fixed; top: -10px; pointer-events: none; animation: confetti 1.5s ease-in forwards; z-index: 500; }
+        @keyframes confetti { 0% { transform: translateY(-10px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 
         @media (max-width: 768px) {
             .lesson-wrapper { padding: 16px 12px; }
@@ -282,9 +95,10 @@
             .code-snippet { font-size: 13px; padding: 14px 16px; }
             .order-token { padding: 10px 14px; font-size: 13px; touch-action: none; }
             .order-token.selected { outline: 3px solid var(--blue); box-shadow: 0 0 0 3px rgba(28,176,246,0.3); }
-            .feedback-bar { padding: 16px 20px; flex-wrap: wrap; gap: 10px; }
+            .feedback-bar { padding: 16px 20px; flex-wrap: wrap; gap: 10px; padding-bottom: 80px; }
             .feedback-icon { font-size: 28px; }
             .feedback-content h3 { font-size: 16px; }
+            .study-timer { bottom: 70px; right: 12px; }
         }
         @media (max-width: 480px) {
             #progress-text { display: none; }
@@ -298,6 +112,12 @@
 
 <div class="lesson-wrapper">
 
+    <!-- Practice Mode Banner -->
+    <div class="practice-banner" th:if="${practiceMode}">
+        🎯 Modo Prática — Sem coração, sem XP. Apenas aprendizado!
+        <a th:href="'/lesson/' + ${lesson.id}" style="margin-left:auto;font-size:13px;color:var(--purple);text-decoration:underline;">Modo Normal</a>
+    </div>
+
     <!-- Progress Header -->
     <div class="lesson-progress-header">
         <button class="back-btn" onclick="history.back()" title="Voltar">✕</button>
@@ -306,8 +126,9 @@
         </div>
         <span id="progress-text">1 / <span th:text="${#lists.size(exercises)}">5</span></span>
         <div id="hearts-display">
-            <span th:each="i : ${#numbers.sequence(1,user.hearts)}">❤️</span>
-            <span th:each="i : ${#numbers.sequence(user.hearts+1,5)}">🤍</span>
+            <span th:if="${!practiceMode}" th:each="i : ${#numbers.sequence(1,user.hearts)}">❤️</span>
+            <span th:if="${!practiceMode}" th:each="i : ${#numbers.sequence(user.hearts+1,5)}">🤍</span>
+            <span th:if="${practiceMode}" style="font-size:14px;color:var(--purple);font-weight:700;">🎯 Prática</span>
         </div>
     </div>
 
@@ -324,20 +145,28 @@
     <div class="feedback-bar" id="feedback-bar"></div>
 </div>
 
+<!-- Study Timer -->
+<div class="study-timer" id="study-timer" title="Timer de Estudo (Pomodoro)">
+    <!-- mounted by JS -->
+</div>
+
 <!-- Completion Modal -->
 <div class="modal-overlay" id="completion-modal">
     <div class="modal-box">
-        <div class="modal-title">🎉 Lição Concluída!</div>
+        <div class="modal-title" th:text="${practiceMode ? '🎯 Prática Concluída!' : '🎉 Lição Concluída!'}">🎉 Lição Concluída!</div>
         <div class="modal-stars" id="completion-stars">⭐⭐⭐</div>
         <div class="modal-xp" id="completion-xp">100</div>
-        <div class="modal-xp-label">XP ganhos!</div>
+        <div class="modal-xp-label" th:text="${practiceMode ? 'Exercícios praticados!' : 'XP ganhos!'}">XP ganhos!</div>
         <div class="modal-stats">
             <div class="modal-stat">
                 <div class="modal-stat-val" id="completion-errors">0</div>
                 <div class="modal-stat-label">Erros</div>
             </div>
         </div>
-        <a href="/dashboard" class="btn btn-primary btn-full">Continuar →</a>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <a href="/dashboard" class="btn btn-primary btn-full">Continuar →</a>
+            <a th:href="'/lesson/' + ${lesson.id} + '/practice'" class="btn btn-outline btn-full" th:if="${!practiceMode}">🎯 Praticar Novamente</a>
+        </div>
     </div>
 </div>
 
@@ -351,7 +180,7 @@
                 <div style="font-size:13px; color:#58CC02;">Seu professor de Java</div>
             </div>
         </div>
-        <div id="javabot-response" style="font-size:15px; line-height:1.6; margin-bottom:24px; text-align:left; background:rgba(255,255,255,0.08); padding:16px; border-radius:12px; white-space:pre-wrap;">
+        <div id="javabot-response" style="font-size:15px; line-height:1.6; margin-bottom:24px; text-align:left; background:rgba(255,255,255,0.08); padding:16px; border-radius:12px; white-space:pre-wrap; max-height: 300px; overflow-y:auto;">
             Carregando...
         </div>
         <button class="btn btn-secondary btn-full" onclick="document.getElementById('javabot-modal').style.display='none'">
@@ -362,13 +191,15 @@
 
 <script th:src="@{/js/app.js}"></script>
 <script th:inline="javascript">
-    const EXERCISES = /*[[${exercisesJson}]]*/ [];
-    const LESSON_ID = /*[[${lesson.id}]]*/ 0;
-    const USER_HEARTS = /*[[${user.hearts}]]*/ 5;
+    const EXERCISES    = /*[[${exercisesJson}]]*/ [];
+    const LESSON_ID    = /*[[${lesson.id}]]*/ 0;
+    const USER_HEARTS  = /*[[${user.hearts}]]*/ 5;
+    const PRACTICE_MODE = /*[[${practiceMode}]]*/ false;
 
-    // Parse JSON if string
     const parsedExercises = typeof EXERCISES === 'string' ? JSON.parse(EXERCISES) : EXERCISES;
-    ExerciseEngine.init(parsedExercises, LESSON_ID, USER_HEARTS);
+    ExerciseEngine.init(parsedExercises, LESSON_ID, USER_HEARTS, PRACTICE_MODE);
+
+    StudyTimer.mount('study-timer');
 </script>
 </body>
 </html>

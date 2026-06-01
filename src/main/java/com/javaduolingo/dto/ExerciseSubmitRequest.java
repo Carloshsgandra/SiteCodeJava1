@@ -9,4 +9,5 @@ public class ExerciseSubmitRequest {
     private String submittedAnswer;
     private int exerciseIndex;
     private int totalExercises;
+    private Boolean practiceMode;
 }

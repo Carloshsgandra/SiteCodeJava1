@@ -54,6 +54,33 @@ public class User {
     @Version
     private Long version;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private int weeklyXp = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int weeklyGoalXp = 200;
+
+    @Column
+    private LocalDate weekStartDate;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int totalLessonsCompleted = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int totalPerfectLessons = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int totalExercisesAttempted = 0;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int totalExercisesCorrect = 0;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_achievements", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "achievement_key")

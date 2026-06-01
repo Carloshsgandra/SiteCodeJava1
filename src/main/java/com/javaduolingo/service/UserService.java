@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -54,12 +55,23 @@ public class UserService {
             user.setStreakDays(1);
         }
         user.setLastActivityDate(today);
+        resetWeeklyXpIfNeeded(user, today);
         userRepository.save(user);
+    }
+
+    private void resetWeeklyXpIfNeeded(User user, LocalDate today) {
+        LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+        if (user.getWeekStartDate() == null || user.getWeekStartDate().isBefore(weekStart)) {
+            user.setWeeklyXp(0);
+            user.setWeekStartDate(weekStart);
+        }
     }
 
     @Transactional
     public void addXp(User user, int amount) {
         user.addXp(amount);
+        resetWeeklyXpIfNeeded(user, LocalDate.now());
+        user.setWeeklyXp(user.getWeeklyXp() + amount);
         checkAchievements(user);
         userRepository.save(user);
     }
@@ -77,28 +89,64 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public void recordLessonComplete(User user, boolean perfect) {
+        user.setTotalLessonsCompleted(user.getTotalLessonsCompleted() + 1);
+        if (perfect) user.setTotalPerfectLessons(user.getTotalPerfectLessons() + 1);
+        checkAchievements(user);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void recordExerciseAttempt(User user, boolean correct) {
+        user.setTotalExercisesAttempted(user.getTotalExercisesAttempted() + 1);
+        if (correct) user.setTotalExercisesCorrect(user.getTotalExercisesCorrect() + 1);
+        userRepository.save(user);
+    }
+
     public List<User> getLeaderboard() {
         return userRepository.findTop10ByOrderByXpDesc();
     }
 
     private void checkAchievements(User user) {
-        if (user.getXp() >= 100 && !user.getAchievements().contains("XP_100")) {
-            user.getAchievements().add("XP_100");
-        }
-        if (user.getXp() >= 500 && !user.getAchievements().contains("XP_500")) {
-            user.getAchievements().add("XP_500");
-        }
-        if (user.getXp() >= 1000 && !user.getAchievements().contains("XP_1000")) {
-            user.getAchievements().add("XP_1000");
-        }
-        if (user.getXp() >= 5000 && !user.getAchievements().contains("XP_5000")) {
-            user.getAchievements().add("XP_5000");
-        }
-        if (user.getStreakDays() >= 7 && !user.getAchievements().contains("STREAK_7")) {
-            user.getAchievements().add("STREAK_7");
-        }
-        if (user.getStreakDays() >= 30 && !user.getAchievements().contains("STREAK_30")) {
-            user.getAchievements().add("STREAK_30");
+        // XP milestones
+        addIfAbsent(user, "XP_100",    user.getXp() >= 100);
+        addIfAbsent(user, "XP_500",    user.getXp() >= 500);
+        addIfAbsent(user, "XP_1000",   user.getXp() >= 1000);
+        addIfAbsent(user, "XP_5000",   user.getXp() >= 5000);
+        addIfAbsent(user, "XP_10000",  user.getXp() >= 10000);
+
+        // Streak milestones
+        addIfAbsent(user, "STREAK_3",  user.getStreakDays() >= 3);
+        addIfAbsent(user, "STREAK_7",  user.getStreakDays() >= 7);
+        addIfAbsent(user, "STREAK_30", user.getStreakDays() >= 30);
+        addIfAbsent(user, "STREAK_60", user.getStreakDays() >= 60);
+        addIfAbsent(user, "STREAK_100",user.getStreakDays() >= 100);
+
+        // Lesson milestones
+        addIfAbsent(user, "LESSON_1",  user.getTotalLessonsCompleted() >= 1);
+        addIfAbsent(user, "LESSON_5",  user.getTotalLessonsCompleted() >= 5);
+        addIfAbsent(user, "LESSON_10", user.getTotalLessonsCompleted() >= 10);
+        addIfAbsent(user, "LESSON_20", user.getTotalLessonsCompleted() >= 20);
+        addIfAbsent(user, "LESSON_30", user.getTotalLessonsCompleted() >= 30);
+
+        // Perfeição
+        addIfAbsent(user, "PERFECT_1",  user.getTotalPerfectLessons() >= 1);
+        addIfAbsent(user, "PERFECT_5",  user.getTotalPerfectLessons() >= 5);
+        addIfAbsent(user, "PERFECT_10", user.getTotalPerfectLessons() >= 10);
+
+        // Meta semanal
+        addIfAbsent(user, "WEEKLY_GOAL", user.getWeeklyXp() >= user.getWeeklyGoalXp());
+
+        // Exercícios resolvidos
+        addIfAbsent(user, "EX_50",  user.getTotalExercisesCorrect() >= 50);
+        addIfAbsent(user, "EX_200", user.getTotalExercisesCorrect() >= 200);
+        addIfAbsent(user, "EX_500", user.getTotalExercisesCorrect() >= 500);
+    }
+
+    private void addIfAbsent(User user, String key, boolean condition) {
+        if (condition && !user.getAchievements().contains(key)) {
+            user.getAchievements().add(key);
         }
     }
 }

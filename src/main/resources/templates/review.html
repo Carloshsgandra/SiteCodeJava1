@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisar Erros — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div class="review-container">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div>
+            <h1 style="font-size:26px;font-weight:800;">📝 Revisar Erros</h1>
+            <p style="color:var(--gray-400);font-size:14px;margin-top:4px;">
+                Exercícios que você errou, ordenados pelos mais frequentes.
+            </p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <span class="due-badge" style="font-size:14px;padding:4px 12px;"
+                  th:text="${totalMistakes + ' erros'}">0 erros</span>
+            <a href="/flashcards" class="btn btn-outline btn-sm">🃏 Flashcards</a>
+            <a href="/dashboard"  class="btn btn-outline btn-sm">← Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="review-empty card" th:if="${mistakes.empty}">
+        <div class="review-empty-icon">🎉</div>
+        <h2 style="font-size:24px;font-weight:800;margin-bottom:8px;">Sem erros registrados!</h2>
+        <p style="color:var(--gray-400);font-size:15px;margin-bottom:24px;">
+            Continue praticando — seus erros aparecerão aqui para você revisar.
+        </p>
+        <a href="/dashboard" class="btn btn-primary">Ir para as Lições →</a>
+    </div>
+
+    <!-- Mistakes List -->
+    <div th:unless="${mistakes.empty}">
+        <div th:each="mistake : ${mistakes}" class="review-card">
+            <div class="review-card-header">
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="review-lesson-tag" th:text="${mistake.lessonTitle ?: 'Lição'}">Lição</span>
+                    <span class="review-mistake-count"
+                          th:text="${mistake.mistakeCount + (mistake.mistakeCount == 1 ? ' vez' : ' vezes')}">1 vez</span>
+                </div>
+                <span style="font-size:12px;color:var(--gray-400);"
+                      th:if="${mistake.lastMistakeAt != null}"
+                      th:text="'Último erro: ' + ${#temporals.format(mistake.lastMistakeAt, 'dd/MM HH:mm')}">
+                </span>
+            </div>
+
+            <div class="review-question" th:text="${mistake.questionText}">Pergunta</div>
+
+            <div class="review-answer">
+                ✅ Resposta correta: <span th:text="${mistake.correctAnswer}">Resposta</span>
+            </div>
+
+            <div class="review-explanation" th:if="${mistake.explanation != null and !mistake.explanation.empty}"
+                 th:text="${mistake.explanation}">Explicação</div>
+
+            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+                <a th:if="${mistake.lessonId != null}"
+                   th:href="'/lesson/' + ${mistake.lessonId} + '/practice'"
+                   class="btn btn-sm btn-secondary">🎯 Praticar Lição</a>
+                <a th:href="'/flashcards'"
+                   class="btn btn-sm btn-outline">🃏 Ver Flashcards</a>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-top:32px;margin-bottom:40px;">
+        <a href="/dashboard" class="btn btn-outline">← Voltar ao Dashboard</a>
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

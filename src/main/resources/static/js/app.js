@@ -1,5 +1,126 @@
 // ===== JavaDuolingo Main App JS =====
 
+// ===== Dark Mode =====
+const DarkMode = (() => {
+    const KEY = 'jd-dark-mode';
+
+    function init() {
+        if (localStorage.getItem(KEY) === '1') enable(false);
+        document.querySelectorAll('.dark-toggle-btn').forEach(btn =>
+            btn.addEventListener('click', toggle));
+    }
+
+    function enable(save = true) {
+        document.body.classList.add('dark-mode');
+        document.querySelectorAll('.dark-toggle-btn').forEach(b => b.textContent = '☀️');
+        if (save) localStorage.setItem(KEY, '1');
+    }
+
+    function disable(save = true) {
+        document.body.classList.remove('dark-mode');
+        document.querySelectorAll('.dark-toggle-btn').forEach(b => b.textContent = '🌙');
+        if (save) localStorage.setItem(KEY, '0');
+    }
+
+    function toggle() {
+        document.body.classList.contains('dark-mode') ? disable() : enable();
+    }
+
+    return { init };
+})();
+
+// ===== Study Timer (Pomodoro) =====
+const StudyTimer = (() => {
+    const WORK_SECS  = 25 * 60;
+    const BREAK_SECS =  5 * 60;
+    let total = WORK_SECS, remaining = WORK_SECS;
+    let interval = null, isBreak = false, paused = true;
+    const CIRCUMFERENCE = 2 * Math.PI * 16; // r=16
+
+    function mount(containerId) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        el.innerHTML = `
+            <div class="timer-ring">
+                <svg width="36" height="36" viewBox="0 0 36 36">
+                    <circle class="timer-ring-bg" cx="18" cy="18" r="16"/>
+                    <circle class="timer-ring-fill" id="timer-ring-fill" cx="18" cy="18" r="16"
+                        stroke-dasharray="${CIRCUMFERENCE}"
+                        stroke-dashoffset="0"/>
+                </svg>
+            </div>
+            <div>
+                <div class="timer-time" id="timer-time">25:00</div>
+                <div class="timer-label" id="timer-label">Foco</div>
+            </div>
+            <div class="timer-controls">
+                <button class="timer-btn" id="timer-toggle" onclick="StudyTimer.toggle()">▶</button>
+                <button class="timer-btn" onclick="StudyTimer.reset()">↺</button>
+            </div>`;
+        update();
+    }
+
+    function toggle() {
+        if (paused) {
+            paused = false;
+            document.getElementById('timer-toggle').textContent = '⏸';
+            interval = setInterval(tick, 1000);
+        } else {
+            paused = true;
+            document.getElementById('timer-toggle').textContent = '▶';
+            clearInterval(interval);
+        }
+    }
+
+    function reset() {
+        clearInterval(interval);
+        paused = true;
+        isBreak = false;
+        total = WORK_SECS;
+        remaining = WORK_SECS;
+        const btn = document.getElementById('timer-toggle');
+        if (btn) btn.textContent = '▶';
+        const wrap = document.getElementById('study-timer');
+        if (wrap) wrap.className = 'study-timer';
+        update();
+    }
+
+    function tick() {
+        remaining--;
+        if (remaining <= 0) {
+            clearInterval(interval);
+            paused = true;
+            showToast(isBreak ? '⚡ Hora de focar!' : '☕ Pausa de 5 min!', 'info');
+            isBreak = !isBreak;
+            total = isBreak ? BREAK_SECS : WORK_SECS;
+            remaining = total;
+            const wrap = document.getElementById('study-timer');
+            if (wrap) wrap.className = isBreak ? 'study-timer break-mode' : 'study-timer';
+            const btn = document.getElementById('timer-toggle');
+            if (btn) btn.textContent = '▶';
+        }
+        update();
+        const wrap = document.getElementById('study-timer');
+        if (wrap && remaining <= 60 && !isBreak) wrap.className = 'study-timer warning';
+    }
+
+    function update() {
+        const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+        const s = String(remaining % 60).padStart(2, '0');
+        const timeEl = document.getElementById('timer-time');
+        const labelEl = document.getElementById('timer-label');
+        const ringEl  = document.getElementById('timer-ring-fill');
+        if (timeEl)  timeEl.textContent = `${m}:${s}`;
+        if (labelEl) labelEl.textContent = isBreak ? 'Pausa' : 'Foco';
+        if (ringEl) {
+            const pct = remaining / total;
+            ringEl.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
+        }
+    }
+
+    return { mount, toggle, reset };
+})();
+
 // ===== Exercise Engine =====
 const ExerciseEngine = (() => {
     let exercises = [];
@@ -8,14 +129,18 @@ const ExerciseEngine = (() => {
     let heartsLeft = 5;
     let xpEarned = 0;
     let wrongAnswers = 0;
+    let practiceMode = false;
+    let hintLevel = 0;
 
-    function init(exercisesData, lid, hearts) {
+    function init(exercisesData, lid, hearts, isPractice) {
         exercises = exercisesData;
         lessonId = lid;
         heartsLeft = hearts;
+        practiceMode = !!isPractice;
         currentIndex = 0;
         xpEarned = 0;
         wrongAnswers = 0;
+        hintLevel = 0;
         renderExercise();
         updateProgressBar();
     }
@@ -43,7 +168,14 @@ const ExerciseEngine = (() => {
         </button>`;
         html += `</div>`;
         container.innerHTML = html;
+        hintLevel = 0;
         attachDragDrop(ex);
+        hideFeedback();
+    }
+
+    function hideFeedback() {
+        const fb = document.getElementById('feedback-bar');
+        if (fb) fb.className = 'feedback-bar';
     }
 
     function renderAnswerArea(ex) {
@@ -81,10 +213,9 @@ const ExerciseEngine = (() => {
                 </div>`;
 
             case 'CODE_ORDER':
-                const tokens = options;
                 return `<div class="code-order-area">
                     <div class="order-bank" id="order-bank">
-                        ${tokens.map((t, i) => `
+                        ${options.map((t, i) => `
                             <div class="order-token" draggable="true" data-token="${escapeHtml(t)}" data-index="${i}">${escapeHtml(t)}</div>
                         `).join('')}
                     </div>
@@ -118,26 +249,15 @@ const ExerciseEngine = (() => {
         let selectedToken = null;
 
         document.querySelectorAll('.order-token').forEach(token => {
-            // Desktop drag-and-drop
-            token.addEventListener('dragstart', e => {
-                draggedEl = token;
-                token.classList.add('dragging');
-            });
+            token.addEventListener('dragstart', e => { draggedEl = token; token.classList.add('dragging'); });
             token.addEventListener('dragend', () => token.classList.remove('dragging'));
 
-            // Mobile tap-to-place
             token.addEventListener('click', () => {
                 if (!isTouchDevice() && !('ontouchstart' in window)) return;
-                if (selectedToken === token) {
-                    token.classList.remove('selected');
-                    selectedToken = null;
-                    return;
-                }
+                if (selectedToken === token) { token.classList.remove('selected'); selectedToken = null; return; }
                 if (selectedToken) selectedToken.classList.remove('selected');
                 selectedToken = token;
                 token.classList.add('selected');
-
-                // If token is in bank, move to drop zone on tap
                 if (bank.contains(token)) {
                     const hint = drop.querySelector('.drop-hint');
                     if (hint) hint.remove();
@@ -148,15 +268,10 @@ const ExerciseEngine = (() => {
             });
         });
 
-        // Drop zone tap: move selected back to bank
         drop.addEventListener('click', e => {
             if (!isTouchDevice() && !('ontouchstart' in window)) return;
             const token = e.target.closest('.order-token');
-            if (token) {
-                bank.appendChild(token);
-                if (selectedToken) selectedToken.classList.remove('selected');
-                selectedToken = null;
-            }
+            if (token) { bank.appendChild(token); if (selectedToken) selectedToken.classList.remove('selected'); selectedToken = null; }
         });
 
         [bank, drop].forEach(zone => {
@@ -190,9 +305,7 @@ const ExerciseEngine = (() => {
     function getAnswer() {
         const ex = exercises[currentIndex];
         switch (ex.type) {
-            case 'MULTIPLE_CHOICE':
-            case 'TRUE_FALSE':
-            case 'CODE_CHALLENGE': {
+            case 'MULTIPLE_CHOICE': case 'TRUE_FALSE': case 'CODE_CHALLENGE': {
                 const sel = document.querySelector('.option-btn.selected, .tf-btn.selected');
                 return sel ? sel.dataset.value : null;
             }
@@ -213,11 +326,7 @@ const ExerciseEngine = (() => {
 
     function checkAnswer() {
         const answer = getAnswer();
-        if (!answer) {
-            showToast('Selecione uma resposta!', 'warning');
-            return;
-        }
-
+        if (!answer) { showToast('Selecione uma resposta!', 'warning'); return; }
         const btn = document.getElementById('check-btn');
         if (btn) btn.disabled = true;
 
@@ -229,7 +338,8 @@ const ExerciseEngine = (() => {
                 lessonId: lessonId,
                 submittedAnswer: answer,
                 exerciseIndex: currentIndex,
-                totalExercises: exercises.length
+                totalExercises: exercises.length,
+                practiceMode: practiceMode
             })
         })
         .then(r => r.json())
@@ -238,7 +348,6 @@ const ExerciseEngine = (() => {
     }
 
     function handleResult(result, submittedAnswer) {
-        const ex = exercises[currentIndex];
         heartsLeft = result.heartsRemaining;
         updateHearts();
 
@@ -246,7 +355,7 @@ const ExerciseEngine = (() => {
             xpEarned += result.xpEarned;
             showFeedback(true, result.explanation, result.xpEarned);
             highlightCorrect();
-            createXpParticles(result.xpEarned);
+            if (!practiceMode && result.xpEarned > 0) createXpParticles(result.xpEarned);
             updateXpDisplay(result.totalXp);
         } else {
             wrongAnswers++;
@@ -261,6 +370,7 @@ const ExerciseEngine = (() => {
         } else if (result.correct) {
             setTimeout(() => {
                 currentIndex++;
+                hintLevel = 0;
                 renderExercise();
                 updateProgressBar();
             }, 1500);
@@ -292,6 +402,7 @@ const ExerciseEngine = (() => {
     function updateHearts() {
         const container = document.getElementById('hearts-display');
         if (!container) return;
+        if (practiceMode) { container.innerHTML = '<span style="font-size:14px;color:var(--purple);font-weight:700;">🎯 Modo Prática</span>'; return; }
         let html = '';
         for (let i = 0; i < 5; i++) {
             html += `<span class="heart ${i < heartsLeft ? 'full' : 'empty'}">${i < heartsLeft ? '❤️' : '🤍'}</span>`;
@@ -309,22 +420,47 @@ const ExerciseEngine = (() => {
         if (!feedback) return;
         feedback.className = `feedback-bar ${correct ? 'correct' : 'wrong'} show`;
         if (correct) {
+            const xpLabel = practiceMode ? '' : ` +${xp} XP`;
             feedback.innerHTML = `<div class="feedback-icon">🎉</div>
                 <div class="feedback-content">
-                    <h3>Incrível! +${xp} XP</h3>
+                    <h3>Incrível!${xpLabel}</h3>
                     <p>${explanation || 'Resposta correta!'}</p>
                 </div>`;
         } else {
+            const ex = exercises[currentIndex];
             feedback.innerHTML = `<div class="feedback-icon">💡</div>
                 <div class="feedback-content">
                     <h3>Não foi dessa vez!</h3>
                     <p>${explanation || ''}</p>
                     ${correctAnswer ? `<p><strong>Resposta correta: ${escapeHtml(correctAnswer)}</strong></p>` : ''}
                 </div>
-                <button class="btn btn-outline btn-sm" onclick="ExerciseEngine.askJavaBot()">
-                    🤖 Pedir ajuda ao JavaBot
-                </button>`;
+                <div class="hints-container">
+                    <button class="hint-btn" id="hint-btn-1" onclick="ExerciseEngine.requestHint(1)">💡 Dica 1</button>
+                    <button class="hint-btn" id="hint-btn-2" onclick="ExerciseEngine.requestHint(2)" style="display:none;">💡 Dica 2</button>
+                    <button class="hint-btn hint-ai" id="hint-btn-3" onclick="ExerciseEngine.requestHint(3)" style="display:none;">🤖 Explicação completa</button>
+                </div>`;
         }
+    }
+
+    function requestHint(level) {
+        const ex = exercises[currentIndex];
+        const btn = document.getElementById(`hint-btn-${level}`);
+        if (btn) { btn.classList.add('hint-loading'); btn.textContent = '⏳ Carregando...'; }
+
+        fetch('/api/javabot/hint-level', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ exerciseId: ex.id, level: level })
+        })
+        .then(r => r.json())
+        .then(data => {
+            showJavaBotResponse(data.hint);
+            if (btn) btn.style.display = 'none';
+            // Unlock next hint button
+            const next = document.getElementById(`hint-btn-${level + 1}`);
+            if (next) next.style.display = 'inline-flex';
+        })
+        .catch(() => showJavaBotResponse('Não foi possível conectar ao JavaBot.'));
     }
 
     function askJavaBot() {
@@ -364,11 +500,11 @@ const ExerciseEngine = (() => {
         const stars = errors === 0 ? 3 : errors <= 2 ? 2 : 1;
         const modal = document.getElementById('completion-modal');
         if (!modal) return;
-        document.getElementById('completion-xp').textContent = xp;
+        document.getElementById('completion-xp').textContent = practiceMode ? '🎯' : xp;
         document.getElementById('completion-stars').innerHTML = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
         document.getElementById('completion-errors').textContent = errors;
         modal.style.display = 'flex';
-        launchConfetti();
+        if (!practiceMode) launchConfetti();
     }
 
     function launchConfetti() {
@@ -376,15 +512,7 @@ const ExerciseEngine = (() => {
         for (let i = 0; i < 50; i++) {
             const c = document.createElement('div');
             c.className = 'confetti-piece';
-            c.style.cssText = `
-                left: ${Math.random() * 100}%;
-                background: ${colors[Math.floor(Math.random() * colors.length)]};
-                animation-delay: ${Math.random() * 0.5}s;
-                animation-duration: ${1 + Math.random()}s;
-                width: ${8 + Math.random() * 8}px;
-                height: ${8 + Math.random() * 8}px;
-                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-            `;
+            c.style.cssText = `left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.5}s;animation-duration:${1+Math.random()}s;width:${8+Math.random()*8}px;height:${8+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};`;
             document.body.appendChild(c);
             setTimeout(() => c.remove(), 2000);
         }
@@ -406,20 +534,17 @@ const ExerciseEngine = (() => {
         t.className = `toast toast-${type}`;
         t.textContent = msg;
         document.body.appendChild(t);
-        setTimeout(() => { t.classList.add('show'); }, 50);
+        setTimeout(() => t.classList.add('show'), 50);
         setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
     }
 
     function escapeHtml(str) {
         if (!str) return '';
         return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    return { init, checkAnswer, selectOption, selectBlankOption, askJavaBot };
+    return { init, checkAnswer, selectOption, selectBlankOption, askJavaBot, requestHint };
 })();
 
 // ===== Code Execution (Piston API) =====
@@ -455,6 +580,16 @@ function runCode(exId, btn) {
     });
 }
 
+// ===== Global Toast =====
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 50);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
+}
+
 // ===== JavaBot Chat Widget =====
 function sendJavaBotMessage() {
     const input = document.getElementById('javabot-chat-input');
@@ -481,17 +616,20 @@ function sendJavaBotMessage() {
             msgs.scrollTop = msgs.scrollHeight;
         }
     })
-    .catch(() => {
-        if (msgs) msgs.innerHTML += `<div class="javabot-msg">Erro ao conectar ao JavaBot.</div>`;
-    });
+    .catch(() => { if (msgs) msgs.innerHTML += `<div class="javabot-msg">Erro ao conectar ao JavaBot.</div>`; });
 }
 
-// Allow Enter key in JavaBot chat
+// ===== Init on load =====
 document.addEventListener('DOMContentLoaded', () => {
+    DarkMode.init();
+
     const input = document.getElementById('javabot-chat-input');
-    if (input) {
-        input.addEventListener('keydown', e => {
-            if (e.key === 'Enter') sendJavaBotMessage();
-        });
-    }
+    if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') sendJavaBotMessage(); });
+
+    // Mark active bottom nav item
+    const path = window.location.pathname;
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+        if (path === item.dataset.path || path.startsWith(item.dataset.path + '/'))
+            item.classList.add('active');
+    });
 });

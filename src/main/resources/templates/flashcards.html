@@ -6,56 +6,61 @@
     <title>Flashcards — JavaDuolingo</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <style>
-        .fc-wrapper { max-width:680px; margin:32px auto; padding:0 16px; }
+        .fc-wrapper { max-width:680px; margin:32px auto; padding:0 16px 40px; }
         .fc-progress-bar { height:8px; background:var(--gray-200); border-radius:999px; margin-bottom:24px; overflow:hidden; }
         .fc-progress-fill { height:100%; background:var(--green); border-radius:999px; transition:width .4s ease; }
-        .fc-scene { perspective:1200px; height:320px; margin-bottom:24px; cursor:pointer; }
-        .fc-card {
-            width:100%; height:100%;
-            transform-style:preserve-3d;
-            transition:transform .5s ease;
-            position:relative;
-        }
+        .fc-scene { perspective:1200px; height:320px; margin-bottom:16px; cursor:pointer; }
+        .fc-card { width:100%; height:100%; transform-style:preserve-3d; transition:transform .5s ease; position:relative; }
         .fc-card.flipped { transform:rotateY(180deg); }
-        .fc-face {
-            position:absolute; inset:0;
-            backface-visibility:hidden;
-            border-radius:20px;
-            padding:32px;
-            display:flex; flex-direction:column; justify-content:center;
-            border:2px solid var(--gray-200);
-            background:white;
-        }
-        .fc-face.back {
-            transform:rotateY(180deg);
-            background:linear-gradient(135deg,#f0fff0,#e8f8e8);
-            border-color:var(--green);
-        }
+        .fc-face { position:absolute; inset:0; backface-visibility:hidden; border-radius:20px; padding:32px; display:flex; flex-direction:column; justify-content:center; border:2px solid var(--gray-200); background:white; }
+        .fc-face.back { transform:rotateY(180deg); background:linear-gradient(135deg,#f0fff0,#e8f8e8); border-color:var(--green); }
         .fc-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--gray-400); margin-bottom:12px; }
         .fc-question { font-size:18px; font-weight:700; line-height:1.4; color:var(--dark); }
         .fc-code { background:#1F1F1F; color:#58CC02; border-radius:10px; padding:12px 16px; font-size:12px; font-family:'Courier New',monospace; margin-top:12px; overflow-x:auto; white-space:pre-wrap; }
         .fc-answer { font-size:20px; font-weight:800; color:var(--green-dark); margin-bottom:8px; }
         .fc-explanation { font-size:13px; color:var(--gray-700); line-height:1.5; }
-        .fc-hint { text-align:center; font-size:13px; color:var(--gray-400); margin-bottom:20px; }
-        .fc-actions { display:flex; gap:12px; justify-content:center; }
-        .fc-btn-wrong { flex:1; padding:16px; border:2px solid var(--red); background:white; color:var(--red); border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; transition:all .15s; }
-        .fc-btn-wrong:hover { background:#FFF0F0; }
-        .fc-btn-right { flex:1; padding:16px; border:2px solid var(--green); background:white; color:var(--green-dark); border-radius:12px; font-weight:700; font-size:15px; cursor:pointer; transition:all .15s; }
-        .fc-btn-right:hover { background:var(--green-light); }
+        .fc-hint { text-align:center; font-size:13px; color:var(--gray-400); margin-bottom:12px; }
         .fc-stats { display:flex; gap:24px; justify-content:center; font-size:14px; margin-bottom:20px; font-weight:700; }
         .fc-stats .hit { color:var(--green); }
         .fc-stats .miss { color:var(--red); }
         .fc-done { text-align:center; padding:40px; }
         .fc-done h2 { font-size:24px; font-weight:800; margin-bottom:8px; }
+        .fc-meta { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+        .fc-meta-badge { padding:4px 12px; border-radius:999px; font-size:12px; font-weight:700; }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
 
 <div class="fc-wrapper">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <h1 style="font-size:22px;font-weight:800;">🃏 Flashcards</h1>
         <span id="fc-counter" style="font-size:14px;font-weight:700;color:var(--gray-400);">0 / 0</span>
+    </div>
+
+    <!-- Mode Selector -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <a th:href="'/flashcards?mode=spaced'"
+           th:classappend="${mode == 'spaced'} ? ' btn-primary' : ' btn-outline'"
+           class="btn btn-sm">🧠 Revisão Inteligente
+           <span class="due-badge" th:if="${dueCount > 0}" th:text="${dueCount}">0</span>
+        </a>
+        <a th:href="'/flashcards?mode=all'"
+           th:classappend="${mode == 'all'} ? ' btn-primary' : ' btn-outline'"
+           class="btn btn-sm">📚 Todos os Cartões</a>
+    </div>
+
+    <!-- Stats row -->
+    <div class="fc-meta">
+        <span class="fc-meta-badge" style="background:var(--green-light);color:var(--green-dark);">
+            ✅ <span th:text="${masteredCount}">0</span> dominados
+        </span>
+        <span class="fc-meta-badge" style="background:#FFF3E0;color:#CC7700;">
+            📅 <span th:text="${dueCount}">0</span> para revisar hoje
+        </span>
+        <span class="fc-meta-badge" style="background:var(--gray-100);color:var(--gray-700);">
+            📚 <span th:text="${totalExercises}">0</span> no total
+        </span>
     </div>
 
     <div class="fc-progress-bar"><div class="fc-progress-fill" id="fc-progress" style="width:0%"></div></div>
@@ -83,9 +88,15 @@
 
     <p class="fc-hint" id="fc-hint">👆 Clique no cartão para revelar a resposta</p>
 
-    <div class="fc-actions" id="fc-actions" style="display:none;">
-        <button class="fc-btn-wrong" onclick="rate(false)">✗ Não sabia</button>
-        <button class="fc-btn-right"  onclick="rate(true)">✓ Sabia!</button>
+    <!-- SM-2 Rating Buttons (shown after flip) -->
+    <div id="fc-actions" style="display:none;">
+        <p style="text-align:center;font-size:13px;font-weight:700;color:var(--gray-400);margin-bottom:8px;">Como foi?</p>
+        <div class="fc-rating">
+            <button class="fc-rate-btn fc-rate-0" onclick="rate(0)">😰<br>Bloqueei</button>
+            <button class="fc-rate-btn fc-rate-1" onclick="rate(1)">😕<br>Difícil</button>
+            <button class="fc-rate-btn fc-rate-2" onclick="rate(2)">🙂<br>OK</button>
+            <button class="fc-rate-btn fc-rate-3" onclick="rate(3)">😄<br>Fácil!</button>
+        </div>
     </div>
 
     <!-- Completion screen -->
@@ -96,6 +107,7 @@
             <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--green);" id="final-hits">0</div><div style="font-size:13px;color:var(--gray-400);">Sabia</div></div>
             <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--red);" id="final-misses">0</div><div style="font-size:13px;color:var(--gray-400);">Não sabia</div></div>
         </div>
+        <p style="font-size:13px;color:var(--gray-400);margin-bottom:20px;">O algoritmo agendou suas revisões automaticamente!</p>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
             <button class="btn btn-primary" onclick="restartSession()">🔄 Repetir erros</button>
             <a href="/dashboard" class="btn btn-outline">🏠 Dashboard</a>
@@ -103,16 +115,17 @@
     </div>
 </div>
 
+<script th:src="@{/js/app.js}"></script>
 <script th:inline="javascript">
     const ALL_CARDS = /*[[${cardsJson}]]*/ [];
     let deck = [], index = 0, hits = 0, misses = 0, flipped = false, missedCards = [];
+    let currentCardId = null;
 
     function shuffle(arr) { return [...arr].sort(() => Math.random() - .5); }
 
     function startSession(cards) {
         deck = shuffle(cards);
-        index = 0; hits = 0; misses = 0; missedCards = [];
-        flipped = false;
+        index = 0; hits = 0; misses = 0; missedCards = []; flipped = false;
         document.getElementById('fc-done').style.display = 'none';
         document.getElementById('fc-scene').style.display = 'block';
         document.getElementById('fc-hint').style.display = 'block';
@@ -123,6 +136,7 @@
     function showCard() {
         if (index >= deck.length) { showDone(); return; }
         const c = deck[index];
+        currentCardId = c.id;
         document.getElementById('fc-question').textContent = c.question;
         const codeEl = document.getElementById('fc-code');
         if (c.code) { codeEl.textContent = c.code; codeEl.style.display = 'block'; }
@@ -143,13 +157,23 @@
         flipped = true;
         document.getElementById('fc-card').classList.add('flipped');
         document.getElementById('fc-hint').style.display = 'none';
-        document.getElementById('fc-actions').style.display = 'flex';
+        document.getElementById('fc-actions').style.display = 'block';
     }
 
-    function rate(knew) {
-        if (knew) hits++; else { misses++; missedCards.push(deck[index]); }
+    function rate(quality) {
+        // quality: 0=bloqueio, 1=difícil, 2=ok, 3=fácil → map to SM-2 scale (0-5)
+        const q5 = [0, 2, 4, 5][quality];
+        if (q5 >= 3) hits++; else { misses++; missedCards.push(deck[index]); }
+
+        // Send to SM-2 backend
+        fetch('/api/flashcards/rate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ exerciseId: currentCardId, quality: q5 })
+        }).catch(() => {});
+
         index++;
-        setTimeout(showCard, 200);
+        setTimeout(showCard, 150);
     }
 
     function showDone() {
@@ -169,10 +193,9 @@
         else startSession(ALL_CARDS);
     }
 
-    if (ALL_CARDS.length > 0) startSession(ALL_CARDS);
-    else {
-        document.getElementById('fc-question').textContent = 'Nenhum exercício disponível.';
-    }
+    const parsed = typeof ALL_CARDS === 'string' ? JSON.parse(ALL_CARDS) : ALL_CARDS;
+    if (parsed.length > 0) startSession(parsed);
+    else document.getElementById('fc-question').textContent = 'Nenhum exercício disponível.';
 </script>
 </body>
 </html>

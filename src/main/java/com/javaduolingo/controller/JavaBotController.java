@@ -1,6 +1,8 @@
 package com.javaduolingo.controller;
 
 import com.javaduolingo.dto.HintRequest;
+import com.javaduolingo.model.Exercise;
+import com.javaduolingo.repository.ExerciseRepository;
 import com.javaduolingo.service.GeminiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import java.util.Map;
 public class JavaBotController {
 
     private final GeminiService geminiService;
+    private final ExerciseRepository exerciseRepository;
 
     @PostMapping("/hint")
     public ResponseEntity<Map<String, String>> getHint(@RequestBody HintRequest request) {
@@ -22,6 +25,21 @@ public class JavaBotController {
                 request.getWrongAnswer(),
                 null
         );
+        return ResponseEntity.ok(Map.of("hint", response));
+    }
+
+    @PostMapping("/hint-level")
+    public ResponseEntity<Map<String, String>> getLeveledHint(@RequestBody Map<String, Object> body) {
+        Long exerciseId = Long.valueOf(body.get("exerciseId").toString());
+        int level = Integer.parseInt(body.getOrDefault("level", "1").toString());
+
+        Exercise ex = exerciseRepository.findById(exerciseId).orElse(null);
+        if (ex == null) {
+            return ResponseEntity.ok(Map.of("hint", "Exercício não encontrado."));
+        }
+
+        String prompt = buildLeveledPrompt(ex, level);
+        String response = geminiService.askJavaBot(prompt);
         return ResponseEntity.ok(Map.of("hint", response));
     }
 
@@ -47,5 +65,29 @@ public class JavaBotController {
                 + "Seja didático e encorajador. Código:\n\n```java\n" + code + "\n```";
         String response = geminiService.askJavaBot(prompt);
         return ResponseEntity.ok(Map.of("review", response));
+    }
+
+    private String buildLeveledPrompt(Exercise ex, int level) {
+        String question = ex.getQuestionText();
+        String answer = ex.getCorrectAnswer();
+        switch (level) {
+            case 1 -> {
+                return "Dê uma dica MUITO SUTIL (nível 1 de 3) para esta questão de Java. "
+                        + "NÃO revele a resposta. Apenas direcione o raciocínio com 1-2 frases curtas.\n\n"
+                        + "Pergunta: " + question;
+            }
+            case 2 -> {
+                return "Dê uma dica MODERADA (nível 2 de 3) para esta questão de Java. "
+                        + "Explique o conceito envolvido sem revelar a resposta direta. "
+                        + "Use no máximo 3-4 frases.\n\n"
+                        + "Pergunta: " + question;
+            }
+            default -> {
+                return "Explique completamente (nível 3 de 3) como resolver esta questão de Java. "
+                        + "Mostre o raciocínio passo a passo. A resposta correta é: " + answer + "\n\n"
+                        + "Pergunta: " + question + "\n\n"
+                        + "Explique POR QUE essa resposta está correta e o que o estudante precisa aprender.";
+            }
+        }
     }
 }

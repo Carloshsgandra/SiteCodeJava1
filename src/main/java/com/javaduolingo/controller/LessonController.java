@@ -21,6 +21,7 @@ public class LessonController {
     private final UserService userService;
     private final LessonService lessonService;
     private final ExerciseService exerciseService;
+    private final MistakeService mistakeService;
 
     @GetMapping("/lesson/{id}")
     public String lessonPage(@PathVariable Long id,
@@ -42,6 +43,31 @@ public class LessonController {
         model.addAttribute("exercises", exercises);
         model.addAttribute("progress", progress);
         model.addAttribute("exercisesJson", buildExercisesJson(exercises));
+        model.addAttribute("practiceMode", false);
+        return "lesson";
+    }
+
+    @GetMapping("/lesson/{id}/practice")
+    public String practiceMode(@PathVariable Long id,
+                               @AuthenticationPrincipal UserDetails userDetails,
+                               Model model) {
+        User user = userService.getByUsername(userDetails.getUsername());
+        Lesson lesson = lessonService.getLessonById(id);
+        Set<Long> completedIds = lessonService.getCompletedLessonIds(user.getId());
+
+        if (!completedIds.contains(id)) {
+            return "redirect:/lesson/" + id;
+        }
+
+        List<Exercise> exercises = lessonService.getExercisesForLesson(id);
+        UserProgress progress = lessonService.getOrCreateProgress(user, lesson);
+
+        model.addAttribute("user", user);
+        model.addAttribute("lesson", lesson);
+        model.addAttribute("exercises", exercises);
+        model.addAttribute("progress", progress);
+        model.addAttribute("exercisesJson", buildExercisesJson(exercises));
+        model.addAttribute("practiceMode", true);
         return "lesson";
     }
 
@@ -56,25 +82,40 @@ public class LessonController {
         Lesson lesson = lessonService.getLessonById(request.getLessonId());
 
         boolean correct = exerciseService.checkAnswer(exercise, request.getSubmittedAnswer());
+        boolean practiceMode = Boolean.TRUE.equals(request.getPracticeMode());
         int xpEarned = 0;
         boolean lessonComplete = false;
 
+        if (!practiceMode) {
+            userService.recordExerciseAttempt(user, correct);
+        }
+
         if (correct) {
-            xpEarned = exercise.getXpReward();
-            userService.addXp(user, xpEarned);
+            if (!practiceMode) {
+                xpEarned = exercise.getXpReward();
+                userService.addXp(user, xpEarned);
+                mistakeService.clearMistake(user.getId(), exercise.getId());
+            }
         } else {
-            userService.deductHeart(user);
-            user = userService.getByUsername(userDetails.getUsername());
+            if (!practiceMode) {
+                userService.deductHeart(user);
+                user = userService.getByUsername(userDetails.getUsername());
+                mistakeService.recordMistake(user, exercise, lesson);
+            }
         }
 
         boolean isLast = request.getExerciseIndex() >= request.getTotalExercises() - 1;
-        if (correct && isLast) {
+        if (correct && isLast && !practiceMode) {
             lessonComplete = true;
+            boolean perfect = user.getHearts() == 5;
             lessonService.completeLesson(user, lesson, 100, 5 - user.getHearts());
             userService.addXp(user, lesson.getXpReward());
+            userService.recordLessonComplete(user, perfect);
             xpEarned += lesson.getXpReward();
-        } else {
-            lessonService.updateExerciseIndex(user, lesson, request.getExerciseIndex() + 1);
+        } else if (!isLast || !correct) {
+            if (!practiceMode) {
+                lessonService.updateExerciseIndex(user, lesson, request.getExerciseIndex() + 1);
+            }
         }
 
         user = userService.getByUsername(userDetails.getUsername());

@@ -57,23 +57,47 @@
                                     <h3 th:text="${lesson.title}">Título</h3>
                                     <p th:text="${lesson.description}">Descrição</p>
                                 </div>
-                                <span class="lesson-xp" th:text="${'+' + lesson.xpReward + ' XP'}">+20 XP</span>
+                                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+                                    <span class="lesson-xp" th:text="${'+' + lesson.xpReward + ' XP'}">+20 XP</span>
+                                    <a th:if="${isCompleted}"
+                                       th:href="'/lesson/' + ${lesson.id} + '/practice'"
+                                       onclick="event.stopPropagation()"
+                                       style="font-size:11px;color:var(--purple);font-weight:700;text-decoration:none;">🎯 Praticar</a>
+                                </div>
                             </a>
                         </th:block>
                     </th:block>
                 </div>
             </div>
-            <!-- Daily Challenge Widget -->
-            <a href="/daily" class="daily-widget-link">
-                <div class="daily-widget">
-                    <span style="font-size:28px;">📅</span>
-                    <div style="flex:1;">
-                        <div style="font-weight:800;font-size:15px;">Desafio do Dia</div>
-                        <div style="font-size:13px;color:var(--gray-400);margin-top:2px;">Ganhe +50 XP respondendo a pergunta de hoje!</div>
+
+            <!-- Quick Actions -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+                <!-- Daily Challenge -->
+                <a href="/daily" class="daily-widget-link" style="margin-bottom:0;">
+                    <div class="daily-widget">
+                        <span style="font-size:28px;">📅</span>
+                        <div style="flex:1;">
+                            <div style="font-weight:800;font-size:15px;">Desafio do Dia</div>
+                            <div style="font-size:12px;color:var(--gray-400);margin-top:2px;">+50 XP por acertar!</div>
+                        </div>
+                        <span class="btn btn-primary btn-sm">Jogar →</span>
                     </div>
-                    <span class="btn btn-primary btn-sm">Jogar →</span>
-                </div>
-            </a>
+                </a>
+
+                <!-- Review Mistakes -->
+                <a class="mistake-badge-link" href="/review">
+                    <div class="mistake-widget">
+                        <span style="font-size:28px;">📝</span>
+                        <div style="flex:1;">
+                            <div style="font-weight:800;font-size:15px;">Revisar Erros</div>
+                            <div style="font-size:12px;color:var(--gray-400);margin-top:2px;"
+                                 th:text="${mistakeCount + ' exercícios para revisar'}">0 exercícios</div>
+                        </div>
+                        <span class="btn btn-sm" style="background:var(--red);color:white;"
+                              th:text="${mistakeCount > 0 ? 'Revisar' : 'Limpo!'}">Revisar</span>
+                    </div>
+                </a>
+            </div>
 
             <!-- Exams Section -->
             <div class="card" style="margin-bottom:24px;" th:if="${!exams.empty}">
@@ -135,6 +159,21 @@
                 </div>
             </div>
 
+            <!-- Weekly Goal -->
+            <div class="weekly-goal-widget">
+                <div class="weekly-goal-header">
+                    <span class="weekly-goal-title">🎯 Meta Semanal</span>
+                    <span class="weekly-goal-xp" th:text="${weeklyXp + '/' + weeklyGoalXp + ' XP'}">0/200 XP</span>
+                </div>
+                <div class="weekly-goal-bar">
+                    <div class="weekly-goal-fill" th:style="'width:' + ${weeklyPct} + '%'"></div>
+                </div>
+                <div class="weekly-goal-sub"
+                     th:text="${weeklyPct >= 100 ? '✅ Meta atingida esta semana!' : 'Estude todo dia para alcançar sua meta!'}">
+                    Estude todo dia!
+                </div>
+            </div>
+
             <!-- Streak -->
             <div class="card sidebar-card">
                 <h3>Sequência</h3>
@@ -149,6 +188,19 @@
                     Complete uma lição hoje para começar sua sequência!
                 </div>
             </div>
+
+            <!-- Flashcards Due -->
+            <a href="/flashcards" style="text-decoration:none; display:block; margin-bottom:16px;" th:if="${dueFlashcards > 0}">
+                <div class="card sidebar-card" style="border-color:var(--blue);background:linear-gradient(135deg,#EEF9FF,#D6F0FF);cursor:pointer;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <div>
+                            <div style="font-weight:800;font-size:14px;">🃏 Flashcards</div>
+                            <div style="font-size:12px;color:var(--gray-400);margin-top:2px;">para revisar hoje</div>
+                        </div>
+                        <span class="due-badge" th:text="${dueFlashcards}">0</span>
+                    </div>
+                </div>
+            </a>
 
             <!-- JavaBot Widget -->
             <div class="card sidebar-card javabot-widget">
@@ -177,6 +229,7 @@
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <a href="/leaderboard" class="btn btn-outline btn-sm">🏆 Ranking</a>
                     <a href="/profile" class="btn btn-outline btn-sm">👤 Perfil</a>
+                    <a href="/flashcards?mode=all" class="btn btn-outline btn-sm">🃏 Todos Flashcards</a>
                 </div>
             </div>
         </aside>
@@ -199,33 +252,18 @@
 
     <style>
         .toast {
-            position: fixed;
-            bottom: 32px;
-            left: 50%;
+            position: fixed; bottom: 32px; left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: #1F1F1F;
-            color: white;
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 15px;
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 9999;
-            pointer-events: none;
+            background: #1F1F1F; color: white;
+            padding: 14px 28px; border-radius: 12px;
+            font-weight: 700; font-size: 15px;
+            opacity: 0; transition: all 0.3s; z-index: 9999; pointer-events: none;
         }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .toast.toast-warning {
-            background: #FF9600;
-        }
-
-        .toast.toast-error {
-            background: #FF4B4B;
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.toast-warning { background: #FF9600; }
+        .toast.toast-error { background: #FF4B4B; }
+        @media (max-width:768px) {
+            .dashboard-layout > main > div:nth-child(3) { grid-template-columns: 1fr; }
         }
     </style>
 </body>

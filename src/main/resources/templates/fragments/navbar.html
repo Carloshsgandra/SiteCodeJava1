@@ -24,6 +24,8 @@
     </div>
 
     <div class="navbar-user">
+        <button class="dark-toggle-btn" title="Alternar Tema">🌙</button>
+        <a href="/review"      class="navbar-chat-btn" title="Revisar Erros">📝</a>
         <a href="/daily"       class="navbar-chat-btn" title="Desafio Diário">📅</a>
         <a href="/flashcards"  class="navbar-chat-btn" title="Flashcards">🃏</a>
         <a href="/playground"  class="navbar-chat-btn" title="Playground">⌨️</a>
@@ -51,9 +53,9 @@
             <span class="nav-icon">📅</span>
             <span>Diário</span>
         </a>
-        <a href="/playground" class="bottom-nav-item" data-path="/playground">
-            <span class="nav-icon">⌨️</span>
-            <span>Editor</span>
+        <a href="/review" class="bottom-nav-item" data-path="/review">
+            <span class="nav-icon">📝</span>
+            <span>Erros</span>
         </a>
         <a href="/profile" class="bottom-nav-item" data-path="/profile">
             <span class="nav-icon">👤</span>
@@ -61,16 +63,6 @@
         </a>
     </div>
 </nav>
-<script>
-(function() {
-    var path = window.location.pathname;
-    document.querySelectorAll('.bottom-nav-item').forEach(function(item) {
-        if (path === item.dataset.path || path.startsWith(item.dataset.path + '/')) {
-            item.classList.add('active');
-        }
-    });
-})();
-</script>
 </th:block>
 </body>
 </html>

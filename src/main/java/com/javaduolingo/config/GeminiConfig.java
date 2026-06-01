@@ -25,8 +25,9 @@ public class GeminiConfig {
 
     @Bean
     public RestClient pistonRestClient() {
+        // Piston ficou whitelist-only em fev/2026 — usando Judge0 CE
         return RestClient.builder()
-                .baseUrl("https://emkc.org/api/v2/piston")
+                .baseUrl("https://ce.judge0.com")
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }

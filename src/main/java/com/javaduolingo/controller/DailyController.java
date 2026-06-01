@@ -41,13 +41,14 @@ public class DailyController {
         model.addAttribute("exercise", exercise);
         model.addAttribute("attempt", attempt.orElse(null));
         model.addAttribute("totalCorrect", dailyService.getTotalCorrect(user.getId()));
+        model.addAttribute("options", List.of()); // default vazio sempre presente
 
-        if (exercise != null) {
+        if (exercise != null && exercise.getOptionsJson() != null && !exercise.getOptionsJson().isBlank()) {
             try {
                 List<?> opts = objectMapper.readValue(exercise.getOptionsJson(), List.class);
                 model.addAttribute("options", opts);
             } catch (Exception e) {
-                model.addAttribute("options", List.of());
+                // mantém o default vazio
             }
         }
         return "daily";

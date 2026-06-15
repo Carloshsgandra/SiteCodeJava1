@@ -1,3 +1,5 @@
 target/
 .env
 *.env
+# H2 file database (local dev)
+data/

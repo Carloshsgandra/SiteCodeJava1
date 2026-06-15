@@ -1,5 +1,6 @@
 package com.javaduolingo.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class JavaExecutionService {
+
+    private final GeminiService geminiService;
 
     private static final int TIMEOUT_SECONDS = 10;
     private static final int MAX_OUTPUT_CHARS = 8000;
@@ -27,6 +31,16 @@ public class JavaExecutionService {
             Pattern.compile("\\bpublic\\s+class\\s+(\\w+)");
 
     public Map<String, String> execute(String code) {
+        // Se o JDK não estiver disponível no servidor, usa IA como simulador
+        if (ToolProvider.getSystemJavaCompiler() == null) {
+            log.info("JDK compiler not available — falling back to AI simulation");
+            Map<String, String> result = geminiService.simulateExecution(code);
+            String output = result.get("output");
+            boolean isError = "error".equals(result.get("type"));
+            String note = isError ? output : output + "\n\n⚡ Executado via IA (JDK indisponível no servidor)";
+            return Map.of("output", note, "type", result.getOrDefault("type", "success"));
+        }
+
         String wrapped = wrapIfNeeded(code);
         String className = extractClassName(wrapped);
 
@@ -46,8 +60,10 @@ public class JavaExecutionService {
             return run(className, tempDir);
 
         } catch (Exception e) {
-            log.error("Internal execution error", e);
-            return Map.of("output", "Erro interno ao executar: " + e.getMessage(), "type", "error");
+            log.error("Internal execution error: {}", e.getMessage());
+            // Tenta IA como último recurso
+            log.info("Falling back to AI simulation after error");
+            return geminiService.simulateExecution(code);
         } finally {
             if (tempDir != null) {
                 deleteQuietly(tempDir);

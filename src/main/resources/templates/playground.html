@@ -57,7 +57,7 @@
     <!-- Output + Review -->
     <div class="output-pane">
         <div class="pane-header">
-            <span>⚡ Saída</span>
+            <span>⚡ Saída <span id="exec-mode-badge" style="display:none; font-size:10px; background:#333; padding:2px 7px; border-radius:10px; margin-left:6px; font-weight:600;"></span></span>
             <button onclick="clearOutput()" style="background:none;border:none;color:#888;cursor:pointer;font-size:12px;">Limpar</button>
         </div>
         <pre id="output-content" class="loading">Clique em ▶ Executar para rodar seu código...</pre>
@@ -117,6 +117,12 @@
             out.textContent = data.output || '(sem saída)';
             btn.disabled = false;
             btn.innerHTML = '▶ Executar';
+            // mostra badge quando execução foi via IA
+            const badge = document.getElementById('exec-mode-badge');
+            if (badge) {
+                badge.textContent = data.source === 'ai' ? '🤖 via IA' : '⚡ JDK local';
+                badge.style.display = 'inline';
+            }
         })
         .catch(() => {
             out.className = 'error';

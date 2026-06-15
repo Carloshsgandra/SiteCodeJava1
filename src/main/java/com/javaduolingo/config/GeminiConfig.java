@@ -23,12 +23,5 @@ public class GeminiConfig {
                 .build();
     }
 
-    @Bean
-    public RestClient pistonRestClient() {
-        // Piston ficou whitelist-only em fev/2026 — usando Judge0 CE
-        return RestClient.builder()
-                .baseUrl("https://ce.judge0.com")
-                .defaultHeader("Content-Type", "application/json")
-                .build();
-    }
+    // Bean pistonRestClient removido — execução agora é interna via JavaExecutionService
 }

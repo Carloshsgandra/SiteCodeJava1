@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${project.title + ' — JavaDuolingo'}">Projeto</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div class="page-container" style="max-width:800px; margin:0 auto; padding:24px 16px;">
+
+    <!-- Breadcrumb -->
+    <div style="margin-bottom:16px; font-size:13px; color:#AFAFAF;">
+        <a href="/projects" style="color:#1CB0F6; text-decoration:none; font-weight:600;">← Projetos</a>
+        <span style="margin:0 8px;">/</span>
+        <span th:text="${project.title}">Projeto</span>
+    </div>
+
+    <!-- Project Header -->
+    <div class="card" style="margin-bottom:24px;">
+        <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:16px;">
+            <span style="font-size:44px;" th:text="${project.icon}">🖥️</span>
+            <div style="flex:1;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+                    <h1 style="font-size:22px; font-weight:800;" th:text="${project.title}">Título</h1>
+                    <span class="difficulty-badge"
+                          th:classappend="${project.difficulty == 'INICIANTE' ? ' diff-easy' : (project.difficulty == 'INTERMEDIARIO' ? ' diff-medium' : ' diff-hard')}"
+                          th:text="${project.difficulty == 'INICIANTE' ? '🌱 Iniciante' : (project.difficulty == 'INTERMEDIARIO' ? '🔥 Intermediário' : '⚡ Avançado')}">
+                    </span>
+                </div>
+                <p style="color:#AFAFAF; font-size:14px; line-height:1.6;" th:text="${project.description}">Descrição</p>
+                <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:13px; color:#AFAFAF;">
+                    <span>⏱ <span th:text="${project.estimatedHours + 'h estimadas'}">2h</span></span>
+                    <span>⚡ <span th:text="${project.xpReward + ' XP ao concluir'}">100 XP</span></span>
+                    <span>📋 <span th:text="${totalSteps + ' passos'}">5 passos</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Goals -->
+        <div th:if="${project.learningGoals != null}" style="padding:14px; background:#F0FFF0; border-radius:10px; margin-top:8px;">
+            <div style="font-weight:700; font-size:13px; color:#2D7A00; margin-bottom:6px;">🎯 O que você vai aprender:</div>
+            <div style="font-size:13px; color:#2D7A00; line-height:1.6;" th:text="${project.learningGoals}">Goals</div>
+        </div>
+
+        <!-- Overall Progress -->
+        <div style="margin-top:16px;">
+            <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+                <span style="font-weight:700;">Progresso</span>
+                <span th:if="${progress.completed}" style="color:#58CC02; font-weight:700;">✅ Concluído!</span>
+                <span th:unless="${progress.completed}"
+                      th:text="${(progress.currentStep - 1) + '/' + totalSteps + ' passos'}">0/5</span>
+            </div>
+            <div class="progress-bar-container" style="height:10px; border-radius:5px;">
+                <div class="progress-bar-fill"
+                     th:if="${progress.completed}"
+                     style="width:100%;"></div>
+                <div class="progress-bar-fill"
+                     th:unless="${progress.completed}"
+                     th:style="'width:' + ${totalSteps > 0 ? (progress.currentStep - 1) * 100 / totalSteps : 0} + '%;'"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Flash -->
+    <div th:if="${stepCompleted != null}"
+         style="padding:14px 20px; background:#D7FFB8; border-radius:12px; margin-bottom:20px; font-weight:700; color:#2D7A00; text-align:center;">
+        ✅ Passo <span th:text="${stepCompleted}"></span> concluído! Continue assim! 🚀
+    </div>
+
+    <!-- Completed Banner -->
+    <div th:if="${progress.completed}"
+         style="padding:24px; background:linear-gradient(135deg,#58CC02,#46A302); border-radius:16px; margin-bottom:24px; text-align:center; color:white;">
+        <div style="font-size:40px; margin-bottom:8px;">🏆</div>
+        <div style="font-size:20px; font-weight:800; margin-bottom:4px;">Projeto Concluído!</div>
+        <div style="font-size:14px; opacity:0.9;">Você ganhou <strong th:text="${project.xpReward + ' XP'}">XP</strong>! Coloque isso no seu GitHub!</div>
+        <div style="margin-top:16px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            <a href="/projects" class="btn btn-outline" style="color:white; border-color:white;">← Mais Projetos</a>
+            <a href="/playground" class="btn" style="background:white; color:#58CC02; font-weight:800;">⌨️ Abrir Playground</a>
+        </div>
+    </div>
+
+    <!-- Steps -->
+    <h2 style="font-size:18px; font-weight:800; margin-bottom:16px;">📋 Passos do Projeto</h2>
+
+    <div class="steps-list">
+        <div th:each="step, stat : ${steps}"
+             th:with="isDone=${step.stepNumber < progress.currentStep or progress.completed},
+                      isCurrent=${step.stepNumber == progress.currentStep and !progress.completed},
+                      isLocked=${step.stepNumber > progress.currentStep and !progress.completed}"
+             class="step-card"
+             th:classappend="${isDone ? ' step-done' : (isCurrent ? ' step-current' : ' step-locked')}">
+
+            <!-- Step Number -->
+            <div class="step-num">
+                <span th:if="${isDone}">✅</span>
+                <span th:if="${isCurrent}" th:text="${step.stepNumber}">1</span>
+                <span th:if="${isLocked}">🔒</span>
+            </div>
+
+            <!-- Step Content -->
+            <div class="step-content">
+                <h3 th:text="${step.stepNumber + '. ' + step.title}" class="step-title">Passo 1</h3>
+
+                <div th:unless="${isLocked}">
+                    <p class="step-desc" th:text="${step.description}">Descrição</p>
+
+                    <!-- Code Template -->
+                    <div th:if="${step.codeTemplate != null and !step.codeTemplate.isEmpty()}"
+                         style="margin-top:12px;">
+                        <div style="font-size:12px; font-weight:700; color:#AFAFAF; margin-bottom:6px;">📝 Código de partida:</div>
+                        <div class="code-block" th:text="${step.codeTemplate}"></div>
+                        <button class="btn btn-outline btn-sm"
+                                style="margin-top:8px; font-size:12px;"
+                                th:onclick="'copyToPlayground(\'' + ${#strings.escapeJavaScript(step.codeTemplate)} + '\')'">
+                            ⌨️ Abrir no Playground
+                        </button>
+                    </div>
+
+                    <!-- Expected Output -->
+                    <div th:if="${step.expectedOutput != null and !step.expectedOutput.isEmpty()}"
+                         style="margin-top:12px;">
+                        <div style="font-size:12px; font-weight:700; color:#AFAFAF; margin-bottom:6px;">💡 Saída esperada:</div>
+                        <div class="output-block" th:text="${step.expectedOutput}"></div>
+                    </div>
+
+                    <!-- Hint (collapsible) -->
+                    <div th:if="${step.hint != null and !step.hint.isEmpty()}" style="margin-top:12px;">
+                        <button class="btn btn-outline btn-sm hint-toggle"
+                                th:data-hint="${step.id}"
+                                onclick="toggleHint(this)">
+                            💡 Ver dica
+                        </button>
+                        <div th:id="'hint-' + ${step.id}"
+                             style="display:none; margin-top:8px; padding:12px; background:#FFF9EE; border-radius:8px; border-left:3px solid #FF9600; font-size:13px; color:#4B4B4B; line-height:1.6;"
+                             th:text="${step.hint}">
+                        </div>
+                    </div>
+
+                    <!-- Complete Button (only for current step) -->
+                    <form th:if="${isCurrent}"
+                          th:action="'/projects/' + ${project.id} + '/step/' + ${step.stepNumber} + '/complete'"
+                          method="post"
+                          style="margin-top:16px;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <button type="submit" class="btn btn-primary" style="width:100%; padding:12px; font-size:15px;">
+                            ✅ Concluí este passo!
+                        </button>
+                    </form>
+                </div>
+
+                <div th:if="${isLocked}" style="font-size:13px; color:#AFAFAF; margin-top:6px;">
+                    Complete o passo anterior para desbloquear.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playground Link -->
+    <div style="margin-top:24px; padding:16px; background:#EEF9FF; border-radius:12px; text-align:center;">
+        <div style="font-weight:700; margin-bottom:8px;">⌨️ Escreva e teste seu código</div>
+        <a href="/playground" class="btn btn-primary">Abrir Playground Java</a>
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+<script>
+function toggleHint(btn) {
+    const hintId = btn.getAttribute('data-hint');
+    const hint = document.getElementById('hint-' + hintId);
+    if (hint.style.display === 'none') {
+        hint.style.display = 'block';
+        btn.textContent = '🙈 Esconder dica';
+    } else {
+        hint.style.display = 'none';
+        btn.textContent = '💡 Ver dica';
+    }
+}
+
+function copyToPlayground(code) {
+    localStorage.setItem('playground_code', code);
+    window.open('/playground', '_blank');
+}
+</script>
+
+<style>
+.difficulty-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.diff-easy { background: #D7FFB8; color: #2D7A00; }
+.diff-medium { background: #FFF3CC; color: #CC7700; }
+.diff-hard { background: #FFE0E0; color: #CC0000; }
+
+.steps-list { display: flex; flex-direction: column; gap: 12px; }
+
+.step-card {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 14px;
+    border: 2px solid #E5E5E5;
+    background: white;
+    transition: border-color 0.2s;
+}
+.step-card.step-done { border-color: #58CC02; background: #FAFFF5; }
+.step-card.step-current { border-color: #1CB0F6; background: #F5FBFF; box-shadow: 0 0 0 3px rgba(28,176,246,0.1); }
+.step-card.step-locked { opacity: 0.6; }
+
+.step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #E5E5E5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.step-card.step-done .step-num { background: #D7FFB8; }
+.step-card.step-current .step-num { background: #1CB0F6; color: white; }
+
+.step-content { flex: 1; }
+.step-title { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.step-desc { font-size: 14px; color: #4B4B4B; line-height: 1.6; }
+
+.code-block {
+    background: #1F1F1F;
+    color: #D7FFB8;
+    padding: 14px;
+    border-radius: 8px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+.output-block {
+    background: #F7F7F7;
+    border: 1px solid #E5E5E5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    color: #4B4B4B;
+    white-space: pre-wrap;
+}
+</style>
+</body>
+</html>

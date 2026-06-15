@@ -99,6 +99,40 @@
                 </a>
             </div>
 
+            <!-- CAREER SECTION -->
+            <div class="card career-section" style="margin-bottom:24px; border:2px solid #1F1F1F; background:linear-gradient(135deg,#1F1F1F,#2A2A2A); color:white;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                    <div>
+                        <h2 style="font-size:17px; font-weight:800; color:white;">🚀 Seu Caminho para Dev</h2>
+                        <p style="font-size:12px; color:#AFAFAF; margin-top:2px;">Complete projetos e prepare-se para entrevistas</p>
+                    </div>
+                    <a href="/roadmap" style="padding:6px 14px; background:#58CC02; color:white; border-radius:8px; font-weight:700; text-decoration:none; font-size:13px; white-space:nowrap;">Ver Roadmap →</a>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+                    <a href="/projects" style="text-decoration:none;">
+                        <div style="background:rgba(255,255,255,0.08); border-radius:12px; padding:14px; text-align:center; transition:background 0.2s; border:1px solid rgba(255,255,255,0.12);">
+                            <div style="font-size:26px; margin-bottom:6px;">🛠️</div>
+                            <div style="font-weight:800; font-size:13px; color:white;">Projetos</div>
+                            <div style="font-size:11px; color:#AFAFAF; margin-top:2px;">Build seu portfólio</div>
+                        </div>
+                    </a>
+                    <a href="/interview" style="text-decoration:none;">
+                        <div style="background:rgba(255,255,255,0.08); border-radius:12px; padding:14px; text-align:center; border:1px solid rgba(255,255,255,0.12);">
+                            <div style="font-size:26px; margin-bottom:6px;">🎤</div>
+                            <div style="font-weight:800; font-size:13px; color:white;">Entrevistas</div>
+                            <div style="font-size:11px; color:#AFAFAF; margin-top:2px;">50+ perguntas reais</div>
+                        </div>
+                    </a>
+                    <a href="/roadmap" style="text-decoration:none;">
+                        <div style="background:rgba(255,255,255,0.08); border-radius:12px; padding:14px; text-align:center; border:1px solid rgba(255,255,255,0.12);">
+                            <div style="font-size:26px; margin-bottom:6px;">🗺️</div>
+                            <div style="font-weight:800; font-size:13px; color:white;">Roadmap</div>
+                            <div style="font-size:11px; color:#AFAFAF; margin-top:2px;">Plano completo</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
             <!-- Exams Section -->
             <div class="card" style="margin-bottom:24px;" th:if="${!exams.empty}">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
@@ -227,9 +261,12 @@
             <div class="card sidebar-card">
                 <h3>Navegar</h3>
                 <div style="display:flex; flex-direction:column; gap:8px;">
+                    <a href="/roadmap" class="btn btn-outline btn-sm">🗺️ Roadmap Dev</a>
+                    <a href="/projects" class="btn btn-outline btn-sm">🛠️ Projetos</a>
+                    <a href="/interview" class="btn btn-outline btn-sm">🎤 Entrevistas</a>
                     <a href="/leaderboard" class="btn btn-outline btn-sm">🏆 Ranking</a>
                     <a href="/profile" class="btn btn-outline btn-sm">👤 Perfil</a>
-                    <a href="/flashcards?mode=all" class="btn btn-outline btn-sm">🃏 Todos Flashcards</a>
+                    <a href="/flashcards?mode=all" class="btn btn-outline btn-sm">🃏 Flashcards</a>
                 </div>
             </div>
         </aside>

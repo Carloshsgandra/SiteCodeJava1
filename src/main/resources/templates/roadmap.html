@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap do Dev — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div class="page-container" style="max-width:860px; margin:0 auto; padding:24px 16px;">
+
+    <!-- Header -->
+    <div class="card" style="text-align:center; padding:32px; margin-bottom:24px; background:linear-gradient(135deg,#1F1F1F,#2D2D2D); color:white;">
+        <div style="font-size:48px; margin-bottom:12px;">🗺️</div>
+        <h1 style="font-size:26px; font-weight:800; color:white; margin-bottom:8px;">Roadmap: Java Developer</h1>
+        <p style="color:#AFAFAF; font-size:15px;">Seu guia completo de zero até a primeira vaga como desenvolvedor</p>
+    </div>
+
+    <!-- Job Readiness Score -->
+    <div class="card" style="margin-bottom:24px;">
+        <h2 style="font-size:18px; font-weight:800; margin-bottom:16px;">🎯 Sua Prontidão para o Mercado</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
+            <div style="text-align:center; padding:14px; background:#F0FFF0; border-radius:12px; border:2px solid #58CC02;">
+                <div style="font-size:22px; font-weight:800; color:#58CC02;" th:text="${lessonScore + '/40'}">0/40</div>
+                <div style="font-size:11px; color:#4B4B4B; font-weight:600; margin-top:4px;">Lições</div>
+            </div>
+            <div style="text-align:center; padding:14px; background:#EEF9FF; border-radius:12px; border:2px solid #1CB0F6;">
+                <div style="font-size:22px; font-weight:800; color:#1CB0F6;" th:text="${projectScore + '/30'}">0/30</div>
+                <div style="font-size:11px; color:#4B4B4B; font-weight:600; margin-top:4px;">Projetos</div>
+            </div>
+            <div style="text-align:center; padding:14px; background:#FFF9EE; border-radius:12px; border:2px solid #FF9600;">
+                <div style="font-size:22px; font-weight:800; color:#FF9600;" th:text="${xpScore + '/20'}">0/20</div>
+                <div style="font-size:11px; color:#4B4B4B; font-weight:600; margin-top:4px;">XP</div>
+            </div>
+            <div style="text-align:center; padding:14px; background:#FFF0F0; border-radius:12px; border:2px solid #FF4B4B;">
+                <div style="font-size:22px; font-weight:800; color:#FF4B4B;" th:text="${streakScore + '/10'}">0/10</div>
+                <div style="font-size:11px; color:#4B4B4B; font-weight:600; margin-top:4px;">Consistência</div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="font-weight:700; font-size:15px;">Score Geral</span>
+                    <span style="font-weight:800; font-size:18px; color:#58CC02;" th:text="${jobReadiness + '/100'}">0/100</span>
+                </div>
+                <div class="progress-bar-container" style="height:14px; border-radius:7px;">
+                    <div class="progress-bar-fill" th:style="'width:' + ${jobReadiness} + '%; border-radius:7px;'"></div>
+                </div>
+                <div style="margin-top:8px; font-size:13px; color:#AFAFAF;"
+                     th:text="${jobReadiness < 30 ? '🌱 Iniciando a jornada — continue estudando!' :
+                               (jobReadiness < 55 ? '📈 Progredindo bem — foque nos projetos!' :
+                               (jobReadiness < 75 ? '🚀 Quase lá — prepare-se para entrevistas!' :
+                               '⭐ Pronto para o mercado — candidate-se!'))}">
+                    Continue estudando!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roadmap Phases -->
+    <h2 style="font-size:20px; font-weight:800; margin-bottom:16px;">📍 Trilha Completa</h2>
+
+    <!-- FASE 1 -->
+    <div class="roadmap-phase" style="border-left:4px solid #58CC02;">
+        <div class="roadmap-phase-header" style="background:linear-gradient(90deg,#D7FFB8,#F0FFF0);">
+            <span style="font-size:24px;">☕</span>
+            <div>
+                <div style="font-weight:800; font-size:16px;">Fase 1 — Fundamentos Java</div>
+                <div style="font-size:13px; color:#4B4B4B;">A base de tudo. Aprenda a linguagem do zero.</div>
+            </div>
+            <span class="phase-badge" style="background:#58CC02; color:white;">✅ No app</span>
+        </div>
+        <div class="roadmap-topics">
+            <div class="roadmap-topic done">✅ Sintaxe Java &amp; Estrutura de Classes</div>
+            <div class="roadmap-topic done">✅ Variáveis, Tipos e Operadores</div>
+            <div class="roadmap-topic done">✅ Controle de Fluxo (if, switch, loops)</div>
+            <div class="roadmap-topic done">✅ Métodos e Funções</div>
+            <div class="roadmap-topic done">✅ Arrays e Strings</div>
+        </div>
+    </div>
+
+    <!-- FASE 2 -->
+    <div class="roadmap-connector">↓</div>
+    <div class="roadmap-phase" style="border-left:4px solid #CE82FF;">
+        <div class="roadmap-phase-header" style="background:linear-gradient(90deg,#F5EEFF,#FAF5FF);">
+            <span style="font-size:24px;">🏛️</span>
+            <div>
+                <div style="font-weight:800; font-size:16px;">Fase 2 — Orientação a Objetos (OOP)</div>
+                <div style="font-size:13px; color:#4B4B4B;">O coração do Java. Essencial para qualquer vaga.</div>
+            </div>
+            <span class="phase-badge" style="background:#CE82FF; color:white;">✅ No app</span>
+        </div>
+        <div class="roadmap-topics">
+            <div class="roadmap-topic done">✅ Classes, Objetos e Construtores</div>
+            <div class="roadmap-topic done">✅ Encapsulamento e Modificadores</div>
+            <div class="roadmap-topic done">✅ Herança e Polimorfismo</div>
+            <div class="roadmap-topic done">✅ Interfaces e Classes Abstratas</div>
+        </div>
+    </div>
+
+    <!-- FASE 3 -->
+    <div class="roadmap-connector">↓</div>
+    <div class="roadmap-phase" style="border-left:4px solid #1CB0F6;">
+        <div class="roadmap-phase-header" style="background:linear-gradient(90deg,#EEF9FF,#F5FBFF);">
+            <span style="font-size:24px;">📚</span>
+            <div>
+                <div style="font-weight:800; font-size:16px;">Fase 3 — Java Avançado</div>
+                <div style="font-size:13px; color:#4B4B4B;">Coleções, Streams e tratamento de erros.</div>
+            </div>
+            <span class="phase-badge" style="background:#1CB0F6; color:white;">✅ No app</span>
+        </div>
+        <div class="roadmap-topics">
+            <div class="roadmap-topic done">✅ Coleções: List, Set, Map</div>
+            <div class="roadmap-topic done">✅ Generics</div>
+            <div class="roadmap-topic done">✅ Streams e Lambdas</div>
+            <div class="roadmap-topic done">✅ Tratamento de Exceções</div>
+            <div class="roadmap-topic done">✅ Opcional e Funcional</div>
+        </div>
+    </div>
+
+    <!-- FASE 4 -->
+    <div class="roadmap-connector">↓</div>
+    <div class="roadmap-phase" style="border-left:4px solid #FF9600;">
+        <div class="roadmap-phase-header" style="background:linear-gradient(90deg,#FFF8EE,#FFFAF5);">
+            <span style="font-size:24px;">🔧</span>
+            <div>
+                <div style="font-weight:800; font-size:16px;">Fase 4 — Ferramentas do Desenvolvedor</div>
+                <div style="font-size:13px; color:#4B4B4B;">Todo dev usa isso no dia a dia.</div>
+            </div>
+            <span class="phase-badge" style="background:#FF9600; color:white;">Próxima etapa</span>
+        </div>
+        <div class="roadmap-topics">
+            <div class="roadmap-topic next">🔲 Git &amp; GitHub (versionamento de código)</div>
+            <div class="roadmap-topic next">🔲 Maven ou Gradle (gerenciamento de dependências)</div>
+            <div class="roadmap-topic next">🔲 IntelliJ IDEA (IDE profissional)</div>
+            <div class="roadmap-topic next">🔲 Terminal / Linha de Comando</div>
+        </div>
+        <div class="roadmap-resource">
+            <a href="https://git-scm.com/book/pt-br/v2" target="_blank" class="resource-link">📖 Pro Git (grátis em PT-BR)</a>
+            <a href="https://www.youtube.com/watch?v=UBAX-13g8OM" target="_blank" class="resource-link">▶ Git para iniciantes</a>
+        </div>
+    </div>
+
+    <!-- FASE 5 -->
+    <div class="roadmap-connector">↓</div>
+    <div class="roadmap-phase" style="border-left:4px solid #FF4B4B;">
+        <div class="roadmap-phase-header" style="background:linear-gradient(90deg,#FFF0F0,#FFF5F5);">
+            <span style="font-size:24px;">🗄️</span>
+            <div>
+                <div style="font-weight:800; font-size:16px;">Fase 5 — Banco de Dados</div>
+                <div style="font-size:13px; color:#4B4B4B;">Todo back-end precisa armazenar dados.</div>
+            </div>
+            <span class="phase-badge" style="background:#FF4B4B; color:white;">Aprender depois</span>
+        </div>
+        <div class="roadmap-topics">
+            <div class="roadmap-topic next">🔲 SQL básico (SELECT, INSERT, UPDATE, DELETE)</div>
+            <div class="roadmap-topic next">🔲 PostgreSQL ou MySQL</div>
+            <div class="roadmap-topic next">🔲 JDBC (conexão Java + banco)</div>
+            <div class="roadmap-topic next">🔲 JPA &amp; Hibernate (ORM)</div>
+        </div>
+        <div class="roadmap-resource">
+            <a href="https://www.w3schools.com/sql/" target="_blank" class="resource-link">📖 W3Schools SQL</a>
+            <a href="https://www.postgresqltutorial.com/" target="_blank" class="resource-link">📖 PostgreSQL Tutorial</a>
+        </div>
+    </div>
+
+    <!-- FASE 6 -->
+    <div class="roadmap-connector">↓</div>
+    <div class="roadmap-phase" style="border-left:4px solid #58CC02;">
+        <div class="roadmap-phase-header" style="background:linear-gradient(90deg,#EEF9FF,#F5FBFF);">
+            <span style="font-size:24px;">🌱</span>
+            <div>
+                <div style="font-weight:800; font-size:16px;">Fase 6 — Spring Boot (Framework Web)</div>
+                <div style="font-size:13px; color:#4B4B4B;">O framework mais usado em Java no mercado.</div>
+            </div>
+            <span class="phase-badge" style="background:#4B4B4B; color:white;">Objetivo final</span>
+        </div>
+        <div class="roadmap-topics">
+            <div class="roadmap-topic next">🔲 Spring Boot básico (controllers, services, repos)</div>
+            <div class="roadmap-topic next">🔲 APIs REST (GET, POST, PUT, DELETE)</div>
+            <div class="roadmap-topic next">🔲 Spring Data JPA</div>
+            <div class="roadmap-topic next">🔲 Spring Security (autenticação)</div>
+            <div class="roadmap-topic next">🔲 Testes com JUnit e Mockito</div>
+        </div>
+        <div class="roadmap-resource">
+            <a href="https://spring.io/quickstart" target="_blank" class="resource-link">🌱 Spring Boot Quickstart</a>
+            <a href="https://www.baeldung.com/spring-boot" target="_blank" class="resource-link">📖 Baeldung (guias Spring)</a>
+        </div>
+    </div>
+
+    <!-- FASE 7: EMPREGO -->
+    <div class="roadmap-connector">↓</div>
+    <div class="roadmap-phase" style="border-left:4px solid #FFD900;">
+        <div class="roadmap-phase-header" style="background:linear-gradient(90deg,#FFFBE6,#FFFEF0);">
+            <span style="font-size:24px;">💼</span>
+            <div>
+                <div style="font-weight:800; font-size:16px;">Fase 7 — Conseguir a Vaga</div>
+                <div style="font-size:13px; color:#4B4B4B;">Portfólio + entrevistas = primeiro emprego.</div>
+            </div>
+            <span class="phase-badge" style="background:#FFD900; color:#1F1F1F;">🏆 Meta final</span>
+        </div>
+        <div class="roadmap-topics">
+            <div class="roadmap-topic next">🔲 GitHub com projetos públicos</div>
+            <div class="roadmap-topic next">🔲 LinkedIn atualizado para dev</div>
+            <div class="roadmap-topic next">🔲 CV técnico (uma página)</div>
+            <div class="roadmap-topic next">🔲 Praticar entrevistas técnicas</div>
+            <div class="roadmap-topic next">🔲 Candidatar em júnior / estágio</div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:24px;">
+        <a href="/projects" class="btn btn-primary" style="text-align:center; padding:16px; font-size:15px;">
+            🛠️ Meus Projetos
+        </a>
+        <a href="/interview" class="btn" style="text-align:center; padding:16px; background:#CE82FF; color:white; border-radius:12px; font-weight:700; text-decoration:none; font-size:15px;">
+            🎤 Prep Entrevista
+        </a>
+        <a href="/dashboard" class="btn btn-outline" style="text-align:center; padding:16px; font-size:15px;">
+            📚 Continuar Lições
+        </a>
+    </div>
+
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+
+<style>
+.roadmap-phase {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 0;
+}
+.roadmap-phase-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #E5E5E5;
+}
+.phase-badge {
+    margin-left: auto;
+    flex-shrink: 0;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.roadmap-topics {
+    padding: 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.roadmap-topic {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.roadmap-topic.done {
+    background: #F0FFF0;
+    color: #2D7A00;
+}
+.roadmap-topic.next {
+    background: #F7F7F7;
+    color: #4B4B4B;
+}
+.roadmap-connector {
+    text-align: center;
+    font-size: 22px;
+    color: #AFAFAF;
+    padding: 8px 0;
+    font-weight: 800;
+}
+.roadmap-resource {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.resource-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: #F7F7F7;
+    border: 1px solid #E5E5E5;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #1CB0F6;
+    transition: background 0.2s;
+}
+.resource-link:hover { background: #EEF9FF; }
+@media (max-width:600px) {
+    [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+    [style*="grid-template-columns:1fr 1fr 1fr 1fr"] { grid-template-columns: 1fr 1fr !important; }
+}
+</style>
+</body>
+</html>

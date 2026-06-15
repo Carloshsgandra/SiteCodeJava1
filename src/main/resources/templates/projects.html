@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projetos Guiados — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+<div class="page-container" style="max-width:900px; margin:0 auto; padding:24px 16px;">
+
+    <!-- Header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+        <div>
+            <h1 style="font-size:26px; font-weight:800; margin-bottom:4px;">🛠️ Projetos Guiados</h1>
+            <p style="color:#AFAFAF; font-size:14px;">Construa projetos reais passo a passo e monte seu portfólio</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <div style="text-align:center; padding:10px 20px; background:white; border-radius:12px; border:2px solid #58CC02;">
+                <div style="font-size:20px; font-weight:800; color:#58CC02;" th:text="${completedCount}">0</div>
+                <div style="font-size:11px; color:#AFAFAF;">concluídos</div>
+            </div>
+            <div style="text-align:center; padding:10px 20px; background:white; border-radius:12px; border:2px solid #E5E5E5;">
+                <div style="font-size:20px; font-weight:800;" th:text="${projects.size()}">0</div>
+                <div style="font-size:11px; color:#AFAFAF;">total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Why Projects Banner -->
+    <div class="card" style="background:linear-gradient(135deg,#1F1F1F,#333); color:white; margin-bottom:24px; display:flex; align-items:center; gap:16px; padding:20px;">
+        <span style="font-size:36px;">💡</span>
+        <div>
+            <div style="font-weight:800; font-size:15px; margin-bottom:4px;">Por que projetos importam?</div>
+            <div style="font-size:13px; color:#AFAFAF;">Recrutadores querem ver código funcionando, não só certificados. Cada projeto aqui é algo que você pode colocar no seu GitHub e mostrar em entrevistas.</div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="projects-grid" th:if="${!projects.empty}">
+        <div th:each="project : ${projects}" class="project-card">
+            <div th:with="progress=${progressMap[project.id]}">
+                <!-- Badge de dificuldade -->
+                <div class="project-header">
+                    <span class="project-icon" th:text="${project.icon}">🖥️</span>
+                    <span class="difficulty-badge"
+                          th:classappend="${project.difficulty == 'INICIANTE' ? ' diff-easy' : (project.difficulty == 'INTERMEDIARIO' ? ' diff-medium' : ' diff-hard')}"
+                          th:text="${project.difficulty == 'INICIANTE' ? '🌱 Iniciante' : (project.difficulty == 'INTERMEDIARIO' ? '🔥 Intermediário' : '⚡ Avançado')}">
+                        Iniciante
+                    </span>
+                </div>
+
+                <h3 class="project-title" th:text="${project.title}">Título</h3>
+                <p class="project-desc" th:text="${project.description}">Descrição</p>
+
+                <!-- Tech topics -->
+                <div class="tech-tags" th:if="${project.techTopics != null}">
+                    <th:block th:each="topic : ${#strings.arraySplit(project.techTopics, ',')}">
+                        <span class="tech-tag" th:text="${#strings.trim(topic)}">Java</span>
+                    </th:block>
+                </div>
+
+                <!-- Meta -->
+                <div class="project-meta">
+                    <span>⏱ <span th:text="${project.estimatedHours + 'h estimadas'}">2h</span></span>
+                    <span>⚡ <span th:text="${project.xpReward + ' XP'}">100 XP</span></span>
+                    <span>📋 <span th:text="${project.steps.size() + ' passos'}">5 passos</span></span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div th:if="${progress != null}" style="margin-top:12px;">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                        <span th:if="${progress.completed}" style="color:#58CC02; font-weight:700;">✅ Concluído!</span>
+                        <span th:unless="${progress.completed}" style="color:#AFAFAF;">
+                            Passo <span th:text="${progress.currentStep}">1</span> / <span th:text="${project.steps.size()}">5</span>
+                        </span>
+                        <span th:unless="${progress.completed}"
+                              th:text="${(progress.currentStep - 1) * 100 / project.steps.size() + '%'}">0%</span>
+                    </div>
+                    <div class="progress-bar-container" style="height:6px;">
+                        <div class="progress-bar-fill"
+                             th:if="${progress.completed}"
+                             style="width:100%; background:#58CC02;"></div>
+                        <div class="progress-bar-fill"
+                             th:unless="${progress.completed}"
+                             th:style="'width:' + ${(progress.currentStep - 1) * 100 / project.steps.size()} + '%;'"></div>
+                    </div>
+                </div>
+
+                <!-- Button -->
+                <a th:href="'/projects/' + ${project.id}"
+                   class="btn btn-project"
+                   th:classappend="${progress != null and progress.completed} ? ' btn-outline' : ' btn-primary'"
+                   th:text="${progress == null ? 'Começar Projeto →' : (progress.completed ? '✅ Ver Projeto' : 'Continuar →')}">
+                    Começar →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${projects.empty}" class="card" style="text-align:center; padding:40px; color:#AFAFAF;">
+        <div style="font-size:40px; margin-bottom:12px;">🛠️</div>
+        <p>Projetos sendo preparados... volte em breve!</p>
+    </div>
+
+    <!-- Footer tip -->
+    <div style="margin-top:24px; padding:16px; background:#FFF9EE; border-radius:12px; border:1px solid #FFD900; text-align:center;">
+        <strong>💡 Dica:</strong> Use o <a href="/playground" style="color:#FF9600; font-weight:700;">Playground</a> para escrever e testar seu código enquanto segue os passos!
+    </div>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+
+<style>
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+.project-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 2px solid #E5E5E5;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+.project-card:hover {
+    border-color: #58CC02;
+    box-shadow: 0 4px 16px rgba(88,204,2,0.15);
+}
+.project-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.project-icon { font-size: 32px; }
+.difficulty-badge {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.diff-easy { background: #D7FFB8; color: #2D7A00; }
+.diff-medium { background: #FFF3CC; color: #CC7700; }
+.diff-hard { background: #FFE0E0; color: #CC0000; }
+.project-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: #1F1F1F;
+}
+.project-desc {
+    font-size: 13px;
+    color: #AFAFAF;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    flex: 1;
+}
+.tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.tech-tag {
+    padding: 2px 8px;
+    background: #EEF9FF;
+    color: #1CB0F6;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.project-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #AFAFAF;
+    margin-bottom: 14px;
+}
+.btn-project {
+    display: block;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 700;
+    text-decoration: none;
+    margin-top: 12px;
+    font-size: 14px;
+    transition: opacity 0.2s;
+}
+.btn-project:hover { opacity: 0.85; }
+</style>
+</body>
+</html>

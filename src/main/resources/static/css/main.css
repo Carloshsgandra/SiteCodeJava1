@@ -1035,3 +1035,227 @@ body.dark-mode .fc-rate-btn { background: #1E1E1E; }
 .accuracy-ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .accuracy-pct { font-size: 24px; font-weight: 800; color: var(--green); }
 .accuracy-label { font-size: 11px; color: var(--gray-400); font-weight: 700; }
+
+/* ===== CAREER SECTION (Dashboard) ===== */
+.career-section a > div:hover {
+  background: rgba(255,255,255,0.14) !important;
+}
+
+/* ===== ROADMAP PAGE ===== */
+.roadmap-phase {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.roadmap-phase-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #E5E5E5;
+}
+.phase-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.roadmap-topics {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.roadmap-topic {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.roadmap-topic.done { background: #F0FFF0; color: #2D7A00; }
+.roadmap-topic.next { background: #F7F7F7; color: #4B4B4B; }
+.roadmap-connector {
+  text-align: center;
+  font-size: 22px;
+  color: #AFAFAF;
+  padding: 8px 0;
+  font-weight: 800;
+}
+.roadmap-resource {
+  padding: 0 20px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.resource-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #F7F7F7;
+  border: 1px solid #E5E5E5;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #1CB0F6;
+  transition: background 0.2s;
+}
+.resource-link:hover { background: #EEF9FF; }
+
+/* ===== PROJECTS PAGE ===== */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.project-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 2px solid #E5E5E5;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.project-card:hover {
+  border-color: #58CC02;
+  box-shadow: 0 4px 16px rgba(88,204,2,0.15);
+}
+.project-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.project-icon { font-size: 32px; }
+.difficulty-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.diff-easy { background: #D7FFB8; color: #2D7A00; }
+.diff-medium { background: #FFF3CC; color: #CC7700; }
+.diff-hard { background: #FFE0E0; color: #CC0000; }
+.project-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; color: #1F1F1F; }
+.project-desc { font-size: 13px; color: #AFAFAF; line-height: 1.5; margin-bottom: 12px; flex: 1; }
+.tech-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.tech-tag { padding: 2px 8px; background: #EEF9FF; color: #1CB0F6; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.project-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: #AFAFAF; margin-bottom: 14px; }
+.btn-project {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  margin-top: 12px;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+.btn-project:hover { opacity: 0.85; }
+
+/* ===== PROJECT DETAIL ===== */
+.steps-list { display: flex; flex-direction: column; gap: 12px; }
+.step-card {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 14px;
+  border: 2px solid #E5E5E5;
+  background: white;
+  transition: border-color 0.2s;
+}
+.step-card.step-done { border-color: #58CC02; background: #FAFFF5; }
+.step-card.step-current { border-color: #1CB0F6; background: #F5FBFF; box-shadow: 0 0 0 3px rgba(28,176,246,0.1); }
+.step-card.step-locked { opacity: 0.6; }
+.step-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #E5E5E5;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 15px;
+  flex-shrink: 0;
+}
+.step-card.step-done .step-num { background: #D7FFB8; }
+.step-card.step-current .step-num { background: #1CB0F6; color: white; }
+.step-content { flex: 1; }
+.step-title { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.step-desc { font-size: 14px; color: #4B4B4B; line-height: 1.6; }
+.code-block {
+  background: #1F1F1F;
+  color: #D7FFB8;
+  padding: 14px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+.output-block {
+  background: #F7F7F7;
+  border: 1px solid #E5E5E5;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  color: #4B4B4B;
+  white-space: pre-wrap;
+}
+
+/* ===== INTERVIEW PAGE ===== */
+.filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-tab {
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  background: white;
+  color: #4B4B4B;
+  border: 2px solid #E5E5E5;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.filter-tab:hover, .filter-tab.active { background: #1F1F1F; color: white; border-color: #1F1F1F; }
+.diff-easy-tab.active { background: #58CC02; border-color: #58CC02; }
+.diff-medium-tab.active { background: #FF9600; border-color: #FF9600; }
+.diff-hard-tab.active { background: #FF4B4B; border-color: #FF4B4B; }
+.questions-list { display: flex; flex-direction: column; gap: 10px; }
+.question-card {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #E5E5E5;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.question-card:hover { border-color: #AFAFAF; }
+.question-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  cursor: pointer;
+  user-select: none;
+}
+.question-header:hover { background: #F7F7F7; }
+.q-number {
+  width: 28px; height: 28px;
+  background: #F7F7F7;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px;
+  flex-shrink: 0; color: #4B4B4B;
+}
+.q-category { padding: 2px 8px; background: #EEF9FF; color: #1CB0F6; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.q-diff { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.q-diff.easy { background: #D7FFB8; color: #2D7A00; }
+.q-diff.medium { background: #FFF3CC; color: #CC7700; }
+.q-diff.hard { background: #FFE0E0; color: #CC0000; }
+.q-text { font-size: 15px; font-weight: 700; color: #1F1F1F; line-height: 1.5; }
+.q-toggle { color: #AFAFAF; font-size: 14px; flex-shrink: 0; margin-top: 4px; }
+.question-answer { padding: 0 18px 16px; }
+.answer-divider { height: 1px; background: #E5E5E5; margin-bottom: 16px; }
+.answer-text { font-size: 14px; color: #4B4B4B; line-height: 1.7; white-space: pre-wrap; }
+
+@media (max-width: 600px) {
+  .projects-grid { grid-template-columns: 1fr; }
+  .career-section [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr 1fr !important; }
+}

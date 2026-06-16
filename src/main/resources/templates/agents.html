@@ -378,12 +378,7 @@
                     <div class="two-col">
                         <div class="field-group">
                             <label class="field-label">Código com problema</label>
-                            <textarea id="debug-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none">public class Main {
-    public static void main(String[] args) {
-        int[] nums = {1, 2, 3};
-        System.out.println(nums[5]);
-    }
-}</textarea>
+                            <textarea id="debug-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none"></textarea>
                             <label class="field-label" style="margin-top:10px;">Mensagem de erro (opcional)</label>
                             <textarea id="debug-error" class="ai-input sm prose"
                                       placeholder="Ex: ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 3"></textarea>
@@ -414,15 +409,7 @@
                     <div class="two-col">
                         <div class="field-group">
                             <label class="field-label">Código para explicar</label>
-                            <textarea id="explain-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none">public class Fatorial {
-    static int fatorial(int n) {
-        if (n <= 1) return 1;
-        return n * fatorial(n - 1);
-    }
-    public static void main(String[] args) {
-        System.out.println(fatorial(5));
-    }
-}</textarea>
+                            <textarea id="explain-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none"></textarea>
                         </div>
                         <div class="field-group">
                             <label class="field-label">Explicação linha a linha</label>
@@ -522,16 +509,7 @@
                     <div class="two-col">
                         <div class="field-group">
                             <label class="field-label">Código original</label>
-                            <textarea id="optimize-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none">public class Soma {
-    public static void main(String[] args) {
-        int[] numeros = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-        int soma = 0;
-        for(int i = 0; i < numeros.length; i++) {
-            soma = soma + numeros[i];
-        }
-        System.out.println("A soma e: " + soma);
-    }
-}</textarea>
+                            <textarea id="optimize-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none"></textarea>
                         </div>
                         <div class="field-group">
                             <label class="field-label">Versão otimizada + melhorias</label>
@@ -910,6 +888,19 @@ function removeEl(id) {
     var el = document.getElementById(id);
     if (el) el.remove();
 }
+
+// ===== DEFAULT TEXTAREA VALUES (via JS para evitar parse Thymeleaf) =====
+(function() {
+    var defaults = {
+        'debug-code': 'public class Main {\n    public static void main(String[] args) {\n        int[] nums = {1, 2, 3};\n        System.out.println(nums[5]);\n    }\n}',
+        'explain-code': 'public class Fatorial {\n    static int fat(int n) {\n        if (n <= 1) return 1;\n        return n * fat(n - 1);\n    }\n    public static void main(String[] args) {\n        System.out.println(fat(5));\n    }\n}',
+        'optimize-code': 'public class Soma {\n    public static void main(String[] args) {\n        int[] numeros = {1,2,3,4,5,6,7,8,9,10};\n        int soma = 0;\n        for(int i = 0; i < numeros.length; i++) {\n            soma = soma + numeros[i];\n        }\n        System.out.println("Soma: " + soma);\n    }\n}'
+    };
+    Object.keys(defaults).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && !el.value) el.value = defaults[id];
+    });
+})();
 </script>
 </body>
 </html>

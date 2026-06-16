@@ -67,6 +67,42 @@ public class JavaBotController {
         return ResponseEntity.ok(Map.of("review", response));
     }
 
+    @PostMapping("/explain")
+    public ResponseEntity<Map<String, String>> explainCode(@RequestBody Map<String, String> body) {
+        String code = body.getOrDefault("code", "").trim();
+        if (code.isBlank()) return ResponseEntity.ok(Map.of("result", "Nenhum código para explicar."));
+        return ResponseEntity.ok(Map.of("result", geminiService.explainCode(code)));
+    }
+
+    @PostMapping("/debug")
+    public ResponseEntity<Map<String, String>> debugCode(@RequestBody Map<String, String> body) {
+        String code = body.getOrDefault("code", "").trim();
+        String error = body.getOrDefault("error", "").trim();
+        if (code.isBlank()) return ResponseEntity.ok(Map.of("result", "Nenhum código fornecido."));
+        return ResponseEntity.ok(Map.of("result", geminiService.debugCode(code, error)));
+    }
+
+    @PostMapping("/challenge")
+    public ResponseEntity<Map<String, String>> generateChallenge(@RequestBody Map<String, String> body) {
+        String topic = body.getOrDefault("topic", "variáveis");
+        String difficulty = body.getOrDefault("difficulty", "Iniciante");
+        return ResponseEntity.ok(Map.of("result", geminiService.generateChallenge(topic, difficulty)));
+    }
+
+    @PostMapping("/pseudocode")
+    public ResponseEntity<Map<String, String>> pseudocodeToJava(@RequestBody Map<String, String> body) {
+        String pseudocode = body.getOrDefault("pseudocode", "").trim();
+        if (pseudocode.isBlank()) return ResponseEntity.ok(Map.of("result", "Nenhum pseudocódigo fornecido."));
+        return ResponseEntity.ok(Map.of("result", geminiService.pseudocodeToJava(pseudocode)));
+    }
+
+    @PostMapping("/optimize")
+    public ResponseEntity<Map<String, String>> optimizeCode(@RequestBody Map<String, String> body) {
+        String code = body.getOrDefault("code", "").trim();
+        if (code.isBlank()) return ResponseEntity.ok(Map.of("result", "Nenhum código para otimizar."));
+        return ResponseEntity.ok(Map.of("result", geminiService.optimizeCode(code)));
+    }
+
     private String buildLeveledPrompt(Exercise ex, int level) {
         String question = ex.getQuestionText();
         String answer = ex.getCorrectAnswer();

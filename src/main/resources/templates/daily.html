@@ -2,89 +2,341 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Desafio Diário — JavaDuolingo</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
+    <style>
+        body { background: #f7f8fa; }
+
+        .daily-page {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 24px 16px 90px;
+        }
+
+        /* ===== HERO ===== */
+        .daily-hero {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .daily-hero .hero-icon { font-size: 54px; line-height: 1; }
+        .daily-hero h1 {
+            font-size: 24px; font-weight: 900;
+            margin: 10px 0 6px;
+        }
+        .daily-hero .subtitle {
+            font-size: 14px; color: #9ca3af;
+        }
+        .daily-hero .subtitle strong { color: #58CC02; }
+
+        /* ===== CARD ===== */
+        .daily-card {
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        /* XP badge row */
+        .xp-badges {
+            display: flex;
+            gap: 10px;
+            padding: 16px 20px 0;
+            flex-wrap: wrap;
+        }
+        .xp-badge {
+            padding: 5px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .xp-badge.correct  { background: #FF9600; color: white; }
+        .xp-badge.wrong    { background: #f3f4f6; color: #6b7280; }
+
+        /* Question area */
+        .question-area { padding: 20px; }
+        .question-text {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.5;
+            color: #111;
+            margin-bottom: 16px;
+        }
+        .code-block {
+            background: #1f1f1f;
+            color: #58CC02;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            white-space: pre;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* Options */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .daily-option {
+            width: 100%;
+            padding: 14px 18px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            text-align: left;
+            transition: all .15s;
+            line-height: 1.4;
+        }
+        .daily-option:hover   { border-color: #1CB0F6; color: #1CB0F6; background: #F0F9FF; }
+        .daily-option.selected { border-color: #58CC02; color: #3a8c00; background: #F0FFF0; }
+        .daily-option.correct-ans { border-color: #58CC02; background: #EEF9E4; color: #2d6e00; }
+        .daily-option.wrong-ans   { border-color: #FF4B4B; background: #FFF0F0; color: #c02020; }
+
+        /* Submit button */
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: #58CC02;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .btn-submit:hover:not(:disabled) { background: #46A302; }
+        .btn-submit:disabled { opacity: .4; cursor: not-allowed; }
+
+        /* ===== RESULT CARD ===== */
+        .result-card {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            padding: 32px 24px;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .result-card.show { display: block; }
+        .result-icon { font-size: 54px; margin-bottom: 12px; }
+        .result-title { font-size: 22px; font-weight: 900; margin-bottom: 6px; }
+        .result-xp {
+            font-size: 28px; font-weight: 900;
+            color: #58CC02; margin-bottom: 16px;
+        }
+        .result-answer-box {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+        .result-explanation {
+            background: #F0F9FF;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 20px;
+            text-align: left;
+            line-height: 1.6;
+            display: none;
+        }
+
+        /* ===== COMPLETED CARD ===== */
+        .completed-card {
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            padding: 40px 24px;
+            text-align: center;
+        }
+        .completed-card .big-icon { font-size: 54px; }
+        .completed-card h2 { font-size: 22px; font-weight: 900; margin: 12px 0 6px; }
+        .completed-card .sub { color: #9ca3af; font-size: 14px; margin-bottom: 24px; }
+        .correct-box {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+        .explanation-box {
+            background: #F0F9FF;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 20px;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        /* ===== NO EXERCISE ===== */
+        .empty-card {
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            padding: 48px 24px;
+            text-align: center;
+        }
+        .empty-card .big-icon { font-size: 54px; }
+        .empty-card p { color: #9ca3af; margin-top: 12px; font-size: 15px; }
+
+        /* ===== BACK BUTTON ===== */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            margin-top: 16px;
+            background: #58CC02;
+            color: white;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: background .15s;
+        }
+        .btn-back:hover { background: #46A302; }
+
+        /* ===== DARK MODE ===== */
+        .dark-mode body { background: #111; }
+        .dark-mode .daily-card,
+        .dark-mode .result-card,
+        .dark-mode .completed-card,
+        .dark-mode .empty-card   { background: #1f1f1f; border-color: #333; }
+        .dark-mode .question-text { color: #e0e0e0; }
+        .dark-mode .daily-option  { background: #2a2a2a; border-color: #444; color: #ccc; }
+        .dark-mode .daily-option:hover   { border-color: #1CB0F6; color: #1CB0F6; background: #1a2535; }
+        .dark-mode .daily-option.selected { border-color: #58CC02; background: #1a2d1a; color: #80d040; }
+        .dark-mode .result-answer-box,
+        .dark-mode .correct-box  { background: #2a2a2a; color: #ccc; }
+        .dark-mode .result-explanation,
+        .dark-mode .explanation-box { background: #1a2035; color: #93c5fd; }
+        .dark-mode .daily-hero h1,
+        .dark-mode .result-title,
+        .dark-mode .completed-card h2 { color: #e0e0e0; }
+
+        /* ===== MOBILE ===== */
+        @media (max-width: 480px) {
+            .daily-page { padding: 16px 12px 90px; }
+            .daily-hero .hero-icon { font-size: 44px; }
+            .daily-hero h1 { font-size: 20px; }
+            .question-area { padding: 16px; }
+            .question-text { font-size: 16px; }
+            .daily-option { padding: 13px 14px; font-size: 14px; }
+            .result-title { font-size: 20px; }
+            .result-xp { font-size: 24px; }
+        }
+    </style>
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
 
-<div style="max-width:700px;margin:32px auto;padding:0 16px;">
+<div class="daily-page">
 
-    <!-- Header -->
-    <div style="text-align:center;margin-bottom:32px;">
-        <div style="font-size:56px;">📅</div>
-        <h1 style="font-size:26px;font-weight:800;margin-top:8px;">Desafio Diário</h1>
-        <p style="color:var(--gray-400);margin-top:6px;">Um novo desafio todo dia • <strong th:text="${totalCorrect}">0</strong> dias corretos no total</p>
+    <!-- Hero -->
+    <div class="daily-hero">
+        <div class="hero-icon">📅</div>
+        <h1>Desafio Diário</h1>
+        <p class="subtitle">
+            Um novo desafio todo dia •
+            <strong th:text="${totalCorrect}">0</strong> dias corretos no total
+        </p>
     </div>
 
-    <!-- Already completed -->
-    <div th:if="${attempt != null}" class="card" style="text-align:center;padding:40px;">
-        <div style="font-size:48px;" th:text="${attempt.correct} ? '🎉' : '📚'">🎉</div>
-        <h2 style="font-size:22px;font-weight:800;margin-top:12px;"
-            th:text="${attempt.correct} ? 'Você acertou hoje!' : 'Você tentou hoje!'">Resultado</h2>
-        <p style="color:var(--gray-400);margin-top:8px;">Volte amanhã para um novo desafio!</p>
-        <div style="margin-top:24px;padding:16px;background:var(--gray-100);border-radius:12px;font-size:14px;color:var(--gray-700);">
+    <!-- ===== JÁ COMPLETOU HOJE ===== -->
+    <div th:if="${attempt != null}" class="completed-card">
+        <div class="big-icon" th:text="${attempt.correct} ? '🎉' : '📚'">🎉</div>
+        <h2 th:text="${attempt.correct} ? 'Você acertou hoje! 🌟' : 'Você tentou hoje!'">Resultado</h2>
+        <p class="sub">Volte amanhã para um novo desafio!</p>
+
+        <div class="correct-box" th:if="${exercise != null}">
             <strong>Resposta correta:</strong>
-            <span th:text="${exercise != null ? exercise.correctAnswer : ''}"></span>
+            <span th:text="${exercise.correctAnswer}"></span>
         </div>
-        <div th:if="${exercise != null and exercise.explanation != null}"
-             style="margin-top:12px;padding:14px;background:#F0FAFF;border-radius:12px;font-size:13px;color:var(--gray-700);text-align:left;"
+
+        <div class="explanation-box"
+             th:if="${exercise != null and exercise.explanation != null and !#strings.isEmpty(exercise.explanation)}"
              th:text="${exercise.explanation}"></div>
-        <a href="/dashboard" class="btn btn-primary" style="margin-top:24px;">🏠 Voltar ao Dashboard</a>
+
+        <a href="/dashboard" class="btn-back">🏠 Voltar ao Dashboard</a>
     </div>
 
-    <!-- Challenge -->
-    <div th:if="${attempt == null and exercise != null}" class="card">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-            <span style="background:var(--orange);color:white;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;">+50 XP se acertar</span>
-            <span style="background:#F7F7F7;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;color:var(--gray-400);">+10 XP se errar</span>
+    <!-- ===== DESAFIO ATIVO ===== -->
+    <div th:if="${attempt == null and exercise != null}">
+        <div class="daily-card" id="challenge-card">
+            <div class="xp-badges">
+                <span class="xp-badge correct">+50 XP se acertar</span>
+                <span class="xp-badge wrong">+10 XP se errar</span>
+            </div>
+            <div class="question-area">
+                <p class="question-text" th:text="${exercise.questionText}">Pergunta</p>
+
+                <pre class="code-block"
+                     th:if="${exercise.codeSnippet != null and !#strings.isEmpty(exercise.codeSnippet)}"
+                     th:text="${exercise.codeSnippet}"></pre>
+
+                <div class="options-list" id="options-list">
+                    <button th:each="opt : ${options}"
+                            class="daily-option"
+                            th:text="${opt}"
+                            th:attr="data-value=${opt}"
+                            onclick="selectOption(this)"></button>
+                </div>
+
+                <button class="btn-submit" id="submit-btn" onclick="submitDaily()" disabled>
+                    Confirmar Resposta
+                </button>
+            </div>
         </div>
 
-        <h2 style="font-size:20px;font-weight:700;margin-bottom:20px;" th:text="${exercise.questionText}">Pergunta</h2>
-
-        <pre th:if="${exercise.codeSnippet != null and !#strings.isEmpty(exercise.codeSnippet)}"
-             style="background:#1F1F1F;color:#58CC02;border-radius:12px;padding:16px 20px;font-size:13px;margin-bottom:20px;overflow-x:auto;"
-             th:text="${exercise.codeSnippet}"></pre>
-
-        <div id="options-container" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-            <button th:each="opt : ${options}"
-                    class="daily-option"
-                    th:text="${opt}"
-                    th:attr="data-value=${opt}"
-                    onclick="selectOption(this)"></button>
+        <!-- Resultado aparece aqui após submit -->
+        <div class="result-card" id="result-card">
+            <div class="result-icon" id="result-icon">🎉</div>
+            <div class="result-title" id="result-title"></div>
+            <div class="result-xp" id="result-xp"></div>
+            <div class="result-answer-box" id="result-answer"></div>
+            <div class="result-explanation" id="result-explanation"></div>
+            <a href="/dashboard" class="btn-back">🏠 Voltar ao Dashboard</a>
         </div>
-
-        <button class="btn btn-primary btn-full" id="submit-btn" onclick="submitDaily()" disabled>
-            Confirmar Resposta
-        </button>
     </div>
 
-    <!-- No exercise -->
-    <div th:if="${exercise == null}" class="card" style="text-align:center;padding:40px;">
-        <div style="font-size:48px;">😴</div>
-        <p style="margin-top:16px;color:var(--gray-400);">Nenhum desafio disponível no momento.</p>
-        <a href="/dashboard" class="btn btn-outline" style="margin-top:16px;">← Voltar</a>
+    <!-- ===== SEM EXERCÍCIO ===== -->
+    <div th:if="${exercise == null and attempt == null}" class="empty-card">
+        <div class="big-icon">😴</div>
+        <p>Nenhum desafio disponível no momento.<br>Tente novamente mais tarde!</p>
+        <a href="/dashboard" class="btn-back" style="margin-top:20px;">← Voltar</a>
     </div>
 
-    <!-- Result (shown after submit) -->
-    <div id="result-box" style="display:none;" class="card" style="text-align:center;padding:32px;margin-top:16px;">
-        <div id="result-icon" style="font-size:48px;">🎉</div>
-        <h2 id="result-title" style="font-size:20px;font-weight:800;margin:12px 0;"></h2>
-        <div id="result-xp" style="font-size:24px;font-weight:800;color:var(--green);"></div>
-        <div id="result-answer" style="margin-top:16px;padding:14px;background:var(--gray-100);border-radius:12px;font-size:14px;"></div>
-        <div id="result-explanation" style="margin-top:12px;padding:14px;background:#F0FAFF;border-radius:12px;font-size:13px;color:var(--gray-700);display:none;"></div>
-        <a href="/dashboard" class="btn btn-primary" style="margin-top:20px;">🏠 Voltar ao Dashboard</a>
-    </div>
 </div>
 
 <script th:src="@{/js/app.js}"></script>
 <script th:inline="javascript">
-    const EXERCISE_ID = /*[[${exercise != null ? exercise.id : 0}]]*/ 0;
-    let selected = null;
+    /*<![CDATA[*/
+    var EXERCISE_ID = /*[[${exercise != null ? exercise.id : 0}]]*/ 0;
+    var selected = null;
 
     function selectOption(btn) {
-        document.querySelectorAll('.daily-option').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.daily-option').forEach(function(b) {
+            b.classList.remove('selected');
+        });
         btn.classList.add('selected');
         selected = btn.dataset.value;
         document.getElementById('submit-btn').disabled = false;
@@ -92,35 +344,63 @@
 
     function submitDaily() {
         if (!selected) return;
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('submit-btn').textContent = 'Verificando...';
+
+        var submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Verificando...';
 
         fetch('/api/daily/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ exerciseId: String(EXERCISE_ID), answer: selected })
         })
-        .then(r => r.json())
-        .then(data => {
-            document.getElementById('options-container').style.display = 'none';
-            document.getElementById('submit-btn').style.display = 'none';
-            const box = document.getElementById('result-box');
-            box.style.display = 'block';
-            document.getElementById('result-icon').textContent = data.correct ? '🎉' : '📚';
-            document.getElementById('result-title').textContent = data.correct ? 'Resposta Correta!' : 'Não foi dessa vez!';
-            document.getElementById('result-xp').textContent = '+' + data.bonusXp + ' XP';
-            document.getElementById('result-answer').innerHTML = '<strong>Resposta correta:</strong> ' + data.correctAnswer;
-            if (data.explanation) {
-                const exp = document.getElementById('result-explanation');
-                exp.style.display = 'block';
-                exp.textContent = data.explanation;
-            }
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
         })
-        .catch(() => {
-            document.getElementById('submit-btn').disabled = false;
-            document.getElementById('submit-btn').textContent = 'Confirmar Resposta';
+        .then(function(data) {
+            // Caso já tenha completado (race condition ou duplo submit)
+            if (data.alreadyCompleted) {
+                window.location.reload();
+                return;
+            }
+
+            // Esconde o card de desafio
+            var challengeCard = document.getElementById('challenge-card');
+            if (challengeCard) challengeCard.style.display = 'none';
+
+            // Mostra o resultado
+            var resultCard = document.getElementById('result-card');
+            resultCard.classList.add('show');
+
+            document.getElementById('result-icon').textContent  = data.correct ? '🎉' : '📚';
+            document.getElementById('result-title').textContent = data.correct
+                ? 'Resposta Correta! 🌟'
+                : 'Não foi dessa vez!';
+            document.getElementById('result-xp').textContent = '+' + (data.bonusXp || 0) + ' XP';
+            document.getElementById('result-answer').innerHTML =
+                '<strong>Resposta correta:</strong> ' + escapeHtml(String(data.correctAnswer || ''));
+
+            if (data.explanation) {
+                var expEl = document.getElementById('result-explanation');
+                expEl.style.display = 'block';
+                expEl.textContent = data.explanation;
+            }
+
+            // Scroll para o resultado no mobile
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        })
+        .catch(function(err) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Confirmar Resposta';
+            showToast('Erro ao enviar resposta: ' + err.message, 'error');
         });
     }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    /*]]>*/
 </script>
 </body>
 </html>

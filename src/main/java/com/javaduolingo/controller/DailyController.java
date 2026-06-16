@@ -73,7 +73,9 @@ public class DailyController {
         boolean correct = exerciseService.checkAnswer(exercise, answer);
         int bonusXp = correct ? 50 : 10;
         userService.addXp(user, bonusXp);
-        userService.updateStreak(user); // desafio diário conta como atividade
+        // Re-fetch após addXp para evitar OptimisticLockException no updateStreak (@Version stale)
+        user = userRepository.findByUsername(auth.getName()).orElseThrow();
+        userService.updateStreak(user);
 
         dailyService.saveAttempt(user, exerciseId, correct);
         user = userRepository.findByUsername(auth.getName()).orElseThrow();

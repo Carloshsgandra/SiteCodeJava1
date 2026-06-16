@@ -43,19 +43,34 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
+    /**
+     * Atualiza a sequência diária do usuário. Idempotente — chamadas múltiplas no mesmo dia
+     * não alteram nada. Restaura corações e reseta XP semanal ao início de cada novo dia.
+     * Seguro para chamar de qualquer controller (lição, desafio, dashboard).
+     */
     @Transactional
     public void updateStreak(User user) {
         LocalDate today = LocalDate.now();
         LocalDate last = user.getLastActivityDate();
+
+        // Já processado hoje — não faz nada (evita stale-version em chamadas duplas)
+        if (last != null && last.equals(today)) {
+            return;
+        }
+
         if (last == null) {
             user.setStreakDays(1);
         } else if (last.equals(today.minusDays(1))) {
             user.setStreakDays(user.getStreakDays() + 1);
-        } else if (!last.equals(today)) {
+        } else {
+            // Um ou mais dias pulados — zera sequência
             user.setStreakDays(1);
         }
+
         user.setLastActivityDate(today);
+        user.setHearts(5); // restaura corações ao início de cada novo dia
         resetWeeklyXpIfNeeded(user, today);
+        checkAchievements(user);   // dispara conquistas de streak
         userRepository.save(user);
     }
 

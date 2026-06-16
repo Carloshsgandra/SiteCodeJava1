@@ -73,6 +73,7 @@ public class DailyController {
         boolean correct = exerciseService.checkAnswer(exercise, answer);
         int bonusXp = correct ? 50 : 10;
         userService.addXp(user, bonusXp);
+        userService.updateStreak(user); // desafio diário conta como atividade
 
         dailyService.saveAttempt(user, exerciseId, correct);
         user = userRepository.findByUsername(auth.getName()).orElseThrow();

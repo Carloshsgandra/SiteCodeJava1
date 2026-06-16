@@ -112,8 +112,9 @@ public class LessonController {
             userService.addXp(user, lesson.getXpReward());
             userService.recordLessonComplete(user, perfect);
             xpEarned += lesson.getXpReward();
-            // Restaura corações ao completar lição (recompensa por terminar)
-            userService.restoreHearts(user);
+            // Atualiza sequência — conta lição como atividade do dia
+            user = userService.getByUsername(userDetails.getUsername());
+            userService.updateStreak(user);
         } else if (!isLast || !correct) {
             if (!practiceMode) {
                 lessonService.updateExerciseIndex(user, lesson, request.getExerciseIndex() + 1);

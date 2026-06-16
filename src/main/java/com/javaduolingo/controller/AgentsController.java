@@ -16,7 +16,13 @@ public class AgentsController {
 
     @GetMapping("/agents")
     public String agentsPage(Model model, Authentication authentication) {
-        User user = userRepository.findByUsername(authentication.getName()).orElseThrow();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/auth/login";
+        }
+        User user = userRepository.findByUsername(authentication.getName()).orElse(null);
+        if (user == null) {
+            return "redirect:/auth/logout";
+        }
         model.addAttribute("user", user);
         return "agents";
     }

@@ -6,29 +6,164 @@
     <title>Playground — JavaDuolingo</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <style>
-        .playground-layout { display:flex; height:calc(100vh - 64px); overflow:hidden; }
-        .editor-pane { flex:1; display:flex; flex-direction:column; min-width:0; }
-        .output-pane { width:380px; display:flex; flex-direction:column; background:#1a1a1a; border-left:2px solid #333; flex-shrink:0; }
-        .pane-header { padding:12px 16px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #333; }
-        .editor-pane .pane-header { background:#fff; border-bottom:2px solid var(--gray-200); color:var(--dark); }
-        .output-pane .pane-header { background:#252525; color:#aaa; }
-        #monaco-editor { flex:1; }
-        .editor-actions { display:flex; gap:8px; }
-        #output-content { flex:1; overflow-y:auto; padding:16px; font-family:'Courier New',monospace; font-size:13px; line-height:1.6; color:#e0e0e0; white-space:pre-wrap; word-break:break-word; }
-        #output-content.error { color:#ff8080; }
-        #output-content.loading { color:#888; }
-        #review-content { padding:16px; font-size:13px; line-height:1.6; color:#ccc; overflow-y:auto; border-top:2px solid #333; max-height:45%; white-space:pre-wrap; }
-        .template-btn { background:none; border:1px solid var(--gray-200); border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; color:var(--gray-700); transition:all .15s; }
-        .template-btn:hover { border-color:var(--green); color:var(--green); }
-        .btn-run { background:#58CC02; color:white; border:none; border-radius:8px; padding:8px 20px; font-weight:700; font-size:14px; cursor:pointer; display:flex;align-items:center;gap:6px; }
-        .btn-run:hover { background:#46A302; }
-        .btn-run:disabled { opacity:.5; cursor:not-allowed; }
-        .btn-review { background:#1CB0F6; color:white; border:none; border-radius:8px; padding:8px 16px; font-weight:700; font-size:14px; cursor:pointer; }
-        .btn-review:hover { background:#0e8fc4; }
-        @media(max-width:768px) {
-            .playground-layout { flex-direction:column; height:auto; }
-            .output-pane { width:100%; height:300px; border-left:none; border-top:2px solid #333; }
-            #monaco-editor { height:300px; }
+        /* ===== DESKTOP ===== */
+        .playground-layout {
+            display: flex;
+            height: calc(100vh - 64px);
+            overflow: hidden;
+        }
+        .editor-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .output-pane {
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            background: #1a1a1a;
+            border-left: 2px solid #333;
+            flex-shrink: 0;
+        }
+        .pane-header {
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #333;
+            flex-shrink: 0;
+        }
+        .editor-pane .pane-header {
+            background: #fff;
+            border-bottom: 2px solid var(--gray-200);
+            color: var(--dark);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .output-pane .pane-header { background: #252525; color: #aaa; }
+        .template-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .editor-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        #monaco-editor { flex: 1; min-height: 0; }
+        #output-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e0e0e0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 0;
+        }
+        #output-content.error { color: #ff8080; }
+        #output-content.loading { color: #888; }
+        #review-content {
+            padding: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #ccc;
+            overflow-y: auto;
+            border-top: 2px solid #333;
+            max-height: 40%;
+            white-space: pre-wrap;
+            flex-shrink: 0;
+        }
+        .template-btn {
+            background: none;
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            padding: 4px 9px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--gray-700);
+            transition: all .15s;
+            white-space: nowrap;
+        }
+        .template-btn:hover { border-color: var(--green); color: var(--green); }
+        .btn-run {
+            background: #58CC02;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .btn-run:hover { background: #46A302; }
+        .btn-run:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-review {
+            background: #1CB0F6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-review:hover { background: #0e8fc4; }
+        .btn-review:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ===== MOBILE — textarea substitui Monaco ===== */
+        #mobile-editor { display: none; }
+
+        @media (max-width: 768px) {
+            /* Layout vira coluna, sem overflow hidden, scrollável */
+            .playground-layout {
+                flex-direction: column;
+                height: auto;
+                overflow: visible;
+                min-height: calc(100dvh - 54px - 60px);
+            }
+            .editor-pane {
+                flex: none;
+                display: flex;
+                flex-direction: column;
+            }
+            .output-pane {
+                width: 100%;
+                height: auto;
+                min-height: 260px;
+                border-left: none;
+                border-top: 2px solid #333;
+                flex-shrink: 0;
+            }
+            /* Monaco escondido no mobile */
+            #monaco-editor { display: none !important; }
+            /* Textarea mobile aparece */
+            #mobile-editor {
+                display: block;
+                width: 100%;
+                min-height: 260px;
+                padding: 14px;
+                font-family: 'Courier New', monospace;
+                font-size: 14px;
+                line-height: 1.6;
+                background: #1e1e1e;
+                color: #d4d4d4;
+                border: none;
+                resize: vertical;
+                outline: none;
+                tab-size: 4;
+                -webkit-text-size-adjust: 100%;
+            }
+            #output-content { min-height: 120px; max-height: 300px; }
+            #review-content { max-height: 200px; }
+            .pane-header { padding: 8px 12px; }
+            .editor-pane .pane-header { flex-direction: column; align-items: flex-start; }
+            .editor-actions { width: 100%; }
+            .btn-run, .btn-review { flex: 1; justify-content: center; font-size: 13px; padding: 9px 10px; }
+            .template-btn { font-size: 11px; padding: 4px 7px; }
         }
     </style>
 </head>
@@ -36,10 +171,10 @@
 <div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
 
 <div class="playground-layout">
-    <!-- Editor -->
+    <!-- Editor Pane -->
     <div class="editor-pane">
-        <div class="pane-header playground-pane-header">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div class="pane-header">
+            <div class="template-btns">
                 <button class="template-btn" onclick="setTemplate('hello')">Hello World</button>
                 <button class="template-btn" onclick="setTemplate('loop')">Loop</button>
                 <button class="template-btn" onclick="setTemplate('array')">Array</button>
@@ -47,30 +182,42 @@
                 <button class="template-btn" onclick="setTemplate('method')">Métodos</button>
             </div>
             <div class="editor-actions">
-                <button class="btn-review" id="review-btn" onclick="reviewCode()">🤖 Revisar com IA</button>
-                <button class="btn-run" id="run-btn" onclick="runCode()">▶ Executar</button>
+                <button class="btn-review" id="review-btn" onclick="reviewCode()">🤖 Revisar</button>
+                <button class="btn-run"    id="run-btn"    onclick="runCode()">▶ Executar</button>
             </div>
         </div>
+
+        <!-- Monaco (desktop) -->
         <div id="monaco-editor"></div>
+
+        <!-- Textarea (mobile) -->
+        <textarea id="mobile-editor" spellcheck="false" autocorrect="off"
+                  autocapitalize="none" autocomplete="off"
+                  placeholder="Digite seu código Java aqui..."></textarea>
     </div>
 
-    <!-- Output + Review -->
+    <!-- Output + Review Pane -->
     <div class="output-pane">
         <div class="pane-header">
-            <span>⚡ Saída <span id="exec-mode-badge" style="display:none; font-size:10px; background:#333; padding:2px 7px; border-radius:10px; margin-left:6px; font-weight:600;"></span></span>
-            <button onclick="clearOutput()" style="background:none;border:none;color:#888;cursor:pointer;font-size:12px;">Limpar</button>
+            <span>⚡ Saída
+                <span id="exec-mode-badge"
+                      style="display:none;font-size:10px;background:#333;padding:2px 7px;border-radius:10px;margin-left:6px;font-weight:600;"></span>
+            </span>
+            <button onclick="clearOutput()"
+                    style="background:none;border:none;color:#888;cursor:pointer;font-size:12px;">Limpar</button>
         </div>
         <pre id="output-content" class="loading">Clique em ▶ Executar para rodar seu código...</pre>
         <div class="pane-header" style="border-top:2px solid #333;">
             <span>🤖 Revisão IA</span>
         </div>
-        <div id="review-content">Clique em "Revisar com IA" para analisar seu código.</div>
+        <div id="review-content">Clique em "Revisar" para analisar seu código.</div>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<!-- Scripts: templates primeiro, depois Monaco/textarea init -->
 <script>
-    let editor;
+    const IS_MOBILE = window.innerWidth <= 768;
+
     const templates = {
         hello: `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Olá, Java!");\n    }\n}`,
         loop:  `public class Main {\n    public static void main(String[] args) {\n        for (int i = 1; i <= 5; i++) {\n            System.out.println("Número: " + i);\n        }\n    }\n}`,
@@ -79,30 +226,27 @@
         method:`public class Main {\n    static int fatorial(int n) {\n        if (n <= 1) return 1;\n        return n * fatorial(n - 1);\n    }\n\n    public static void main(String[] args) {\n        System.out.println("5! = " + fatorial(5));\n        System.out.println("10! = " + fatorial(10));\n    }\n}`
     };
 
-    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
-    require(['vs/editor/editor.main'], function() {
-        editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-            value: templates.hello,
-            language: 'java',
-            theme: 'vs-dark',
-            fontSize: 14,
-            minimap: { enabled: false },
-            automaticLayout: true,
-            scrollBeyondLastLine: false,
-            wordWrap: 'on'
-        });
-    });
+    function getCode() {
+        if (IS_MOBILE) {
+            return document.getElementById('mobile-editor').value;
+        }
+        return window.editor ? window.editor.getValue() : '';
+    }
 
     function setTemplate(name) {
-        if (editor) editor.setValue(templates[name]);
+        if (IS_MOBILE) {
+            document.getElementById('mobile-editor').value = templates[name];
+        } else if (window.editor) {
+            window.editor.setValue(templates[name]);
+        }
     }
 
     function runCode() {
-        const code = editor ? editor.getValue() : '';
+        const code = getCode();
         const btn = document.getElementById('run-btn');
         const out = document.getElementById('output-content');
         btn.disabled = true;
-        btn.textContent = '⏳ Executando...';
+        btn.textContent = '⏳...';
         out.className = 'loading';
         out.textContent = 'Compilando e executando...';
 
@@ -117,27 +261,30 @@
             out.textContent = data.output || '(sem saída)';
             btn.disabled = false;
             btn.innerHTML = '▶ Executar';
-            // mostra badge quando execução foi via IA
             const badge = document.getElementById('exec-mode-badge');
             if (badge) {
-                badge.textContent = data.source === 'ai' ? '🤖 via IA' : '⚡ JDK local';
+                badge.textContent = data.source === 'ai' ? '🤖 via IA' : '⚡ JDK';
                 badge.style.display = 'inline';
+            }
+            // Scroll para saída no mobile
+            if (IS_MOBILE) {
+                document.getElementById('output-content').scrollIntoView({ behavior: 'smooth' });
             }
         })
         .catch(() => {
             out.className = 'error';
-            out.textContent = 'Erro ao conectar ao servidor de execução.';
+            out.textContent = 'Erro ao conectar ao servidor.';
             btn.disabled = false;
             btn.innerHTML = '▶ Executar';
         });
     }
 
     function reviewCode() {
-        const code = editor ? editor.getValue() : '';
+        const code = getCode();
         const btn = document.getElementById('review-btn');
         const rev = document.getElementById('review-content');
         btn.disabled = true;
-        rev.textContent = '🤖 Analisando seu código...';
+        rev.textContent = '🤖 Analisando...';
 
         fetch('/api/javabot/review', {
             method: 'POST',
@@ -145,24 +292,55 @@
             body: JSON.stringify({ code })
         })
         .then(r => r.json())
-        .then(data => {
-            rev.textContent = data.review;
-            btn.disabled = false;
-        })
-        .catch(() => {
-            rev.textContent = 'Erro ao conectar ao JavaBot.';
-            btn.disabled = false;
-        });
+        .then(data => { rev.textContent = data.review; btn.disabled = false; })
+        .catch(() => { rev.textContent = 'Erro ao conectar ao JavaBot.'; btn.disabled = false; });
     }
 
     function clearOutput() {
-        document.getElementById('output-content').className = 'loading';
-        document.getElementById('output-content').textContent = 'Clique em ▶ Executar para rodar seu código...';
+        const out = document.getElementById('output-content');
+        out.className = 'loading';
+        out.textContent = 'Clique em ▶ Executar para rodar seu código...';
+        document.getElementById('exec-mode-badge').style.display = 'none';
     }
+
+    // Tab key inserts spaces in textarea (mobile)
+    document.getElementById('mobile-editor')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+        }
+    });
 
     document.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runCode(); }
     });
+
+    // Monaco: carrega no desktop; textarea usada diretamente no mobile
+    if (!IS_MOBILE) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js';
+        s.onload = function() {
+            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+            require(['vs/editor/editor.main'], function() {
+                window.editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                    value: templates.hello,
+                    language: 'java',
+                    theme: 'vs-dark',
+                    fontSize: 14,
+                    minimap: { enabled: false },
+                    automaticLayout: true,
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on'
+                });
+            });
+        };
+        document.head.appendChild(s);
+    } else {
+        document.getElementById('mobile-editor').value = templates.hello;
+    }
 </script>
 </body>
 </html>

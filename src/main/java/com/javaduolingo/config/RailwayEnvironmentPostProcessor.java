@@ -34,7 +34,8 @@ public class RailwayEnvironmentPostProcessor implements EnvironmentPostProcessor
             int port = uri.getPort() > 0 ? uri.getPort() : 5432;
             String db   = uri.getPath().replaceFirst("^/", "");
 
-            String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + "/" + db + "?sslmode=require";
+            // Sem forçar sslmode — driver usa "prefer" por padrão (tenta SSL, cai em plain se não disponível)
+            String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + "/" + db;
 
             String[] userInfo = uri.getUserInfo() != null
                     ? uri.getUserInfo().split(":", 2)

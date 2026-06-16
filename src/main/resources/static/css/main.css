@@ -1259,3 +1259,126 @@ body.dark-mode .fc-rate-btn { background: #1E1E1E; }
   .projects-grid { grid-template-columns: 1fr; }
   .career-section [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr 1fr !important; }
 }
+
+/* ============================================================
+   MOBILE RESPONSIVE — COMPREHENSIVE FIXES
+   ============================================================ */
+
+/* --- Reusable grid classes (CSS-controlled, not inline) --- */
+.dashboard-quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.dashboard-ai-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.roadmap-score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+  .dashboard-quick-actions { grid-template-columns: 1fr; }
+  .dashboard-ai-grid { grid-template-columns: 1fr 1fr; }
+  .roadmap-score-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* --- Bottom nav: iOS safe-area support --- */
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: auto;
+  min-height: 60px;
+}
+.bottom-nav-items { min-height: 60px; }
+
+@media (max-width: 768px) {
+  /* Body extra padding accounts for bottom nav */
+  body:not(.page-lesson) { padding-bottom: max(60px, calc(60px + env(safe-area-inset-bottom, 0px))); }
+
+  /* Study timer: always above bottom nav */
+  body:not(.page-lesson) .study-timer {
+    bottom: max(76px, calc(76px + env(safe-area-inset-bottom, 0px)));
+    right: 12px;
+    padding: 9px 12px;
+    gap: 8px;
+  }
+  body:not(.page-lesson) .study-timer .timer-label { display: none; }
+  body:not(.page-lesson) .study-timer .timer-time { font-size: 16px; min-width: 38px; }
+
+  /* Playground pane-header: stack template buttons + action row on mobile */
+  .playground-pane-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+  .playground-pane-header .editor-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  /* Agents page: scrollable tabs */
+  .agents-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+  }
+  .agents-tabs::-webkit-scrollbar { display: none; }
+  .agent-tab { flex-shrink: 0; padding: 8px 14px; font-size: 13px; }
+  .agents-layout { padding: 16px 12px 80px; }
+  .agents-header h1 { font-size: 22px; }
+  .panel-body { padding: 16px; }
+  .panel-header { padding: 14px 16px; gap: 10px; }
+  .panel-icon { width: 40px; height: 40px; font-size: 20px; }
+  .panel-header h2 { font-size: 16px; }
+  .challenge-options { flex-direction: column; }
+  .challenge-field { min-width: unset; width: 100%; }
+  .btn-agent { padding: 9px 16px; font-size: 13px; }
+
+  /* Roadmap page inline grids */
+  .roadmap-header-grid { grid-template-columns: 1fr 1fr !important; }
+
+  /* Chat page: safe-area aware height */
+  .chat-page {
+    height: calc(100dvh - 54px - 60px - env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Exam wrapper padding */
+  .exam-wrapper { padding: 14px 10px; }
+
+  /* Review container */
+  .review-container { padding: 0 10px; margin: 12px auto; }
+
+  /* Flashcard: slightly smaller scene on mobile */
+  .fc-scene { height: 280px; }
+  .fc-wrapper { padding: 0 12px 80px; margin: 20px auto; }
+
+  /* Daily page bottom padding */
+  .daily-wrapper { padding-bottom: 80px; }
+}
+
+/* Very small screens (320-360px) */
+@media (max-width: 380px) {
+  .navbar-stats .stat-badge.streak { display: none; }
+  .navbar { padding: 0 10px; }
+  .navbar-brand { font-size: 16px; gap: 6px; }
+  .stat-badge { font-size: 12px; gap: 2px; }
+  .stat-badge .icon { font-size: 15px; }
+  .lesson-xp { display: none; }
+  .dashboard-ai-grid { grid-template-columns: 1fr; }
+}
+
+/* Dark mode: bottom nav */
+body.dark-mode .bottom-nav { background: #1E1E1E; border-color: #2D2D2D; }
+body.dark-mode .bottom-nav-item { color: #888; }
+body.dark-mode .bottom-nav-item.active { color: var(--green); }

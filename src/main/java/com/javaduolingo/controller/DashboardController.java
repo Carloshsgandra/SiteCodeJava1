@@ -27,6 +27,10 @@ public class DashboardController {
     public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User user = userService.getByUsername(userDetails.getUsername());
         userService.updateStreak(user);
+        // Restaura corações no início de um novo dia
+        if (user.getHearts() < 5) {
+            userService.restoreHearts(user);
+        }
         user = userService.getByUsername(userDetails.getUsername());
 
         List<LearningModule> modules = lessonService.getAllModules();

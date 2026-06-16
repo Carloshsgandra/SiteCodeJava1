@@ -71,7 +71,7 @@
             </div>
 
             <!-- Quick Actions -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+            <div class="dashboard-quick-actions">
                 <!-- Daily Challenge -->
                 <a href="/daily" class="daily-widget-link" style="margin-bottom:0;">
                     <div class="daily-widget">
@@ -108,8 +108,8 @@
                     </div>
                     <a href="/agents" style="padding:6px 14px; background:#8B5CF6; color:white; border-radius:8px; font-weight:700; text-decoration:none; font-size:13px; white-space:nowrap;">Ver Agentes →</a>
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
-                    <a href="/agents" onclick="localStorage.setItem('jd-agent','debug')" style="text-decoration:none;">
+                <div class="dashboard-ai-grid">
+                    <a href="/agents" style="text-decoration:none;">
                         <div style="background:rgba(255,255,255,0.08); border-radius:12px; padding:14px; text-align:center; border:1px solid rgba(255,255,255,0.12); transition:background 0.2s;">
                             <div style="font-size:24px; margin-bottom:6px;">🐛</div>
                             <div style="font-weight:800; font-size:13px; color:white;">Debugger IA</div>

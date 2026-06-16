@@ -2,320 +2,419 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Agentes IA — JavaDuolingo</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <style>
-        .agents-layout {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 28px 20px 80px;
+        :root {
+            --cafe-orange: #FF9600;
+            --cafe-dark: #7a4200;
         }
-        .agents-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        .agents-header h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
-        .agents-header p  { color: var(--gray-400); font-size: 15px; }
 
-        /* ===== TABS ===== */
-        .agents-tabs {
+        body { background: #f7f8fa; }
+
+        .agents-page {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px 16px 90px;
+        }
+
+        /* ===== HEADER ===== */
+        .agents-hero {
+            background: linear-gradient(135deg, #58CC02 0%, #1CB0F6 100%);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+        }
+        .agents-hero h1 { font-size: 26px; font-weight: 900; margin-bottom: 6px; }
+        .agents-hero p  { font-size: 14px; opacity: .9; }
+
+        /* ===== MODE SWITCHER ===== */
+        .mode-switcher {
+            display: flex;
+            background: white;
+            border-radius: 14px;
+            padding: 6px;
+            gap: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--gray-400);
+            transition: all .2s;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .mode-btn.active {
+            background: var(--green);
+            color: white;
+            box-shadow: 0 2px 8px rgba(88,204,2,.3);
+        }
+        .mode-btn.active.cafe { background: var(--cafe-orange); box-shadow: 0 2px 8px rgba(255,150,0,.3); }
+        .mode-icon { display: block; font-size: 20px; margin-bottom: 2px; }
+
+        /* ===== MODE PANELS ===== */
+        .mode-panel { display: none; }
+        .mode-panel.active { display: block; }
+
+        /* ===== AGENT TABS (modo formal) ===== */
+        .agent-tabs-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            margin-bottom: 14px;
+        }
+        .agent-tabs-wrap::-webkit-scrollbar { display: none; }
+        .agent-tabs {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 24px;
+            white-space: nowrap;
+            padding-bottom: 2px;
         }
         .agent-tab {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 9px 16px;
+            padding: 9px 14px;
             border-radius: 12px;
-            border: 2px solid var(--gray-200);
+            border: 2px solid #e5e7eb;
             background: white;
             cursor: pointer;
             font-size: 13px;
             font-weight: 700;
-            color: var(--gray-700);
-            transition: all 0.15s;
+            color: #6b7280;
+            transition: all .15s;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         .agent-tab:hover { border-color: var(--green); color: var(--green); }
         .agent-tab.active { background: var(--green); border-color: var(--green); color: white; }
-        .tab-icon { font-size: 16px; }
 
-        /* ===== PANELS ===== */
-        .agent-panel {
-            display: none;
+        /* ===== CARD ===== */
+        .agent-card {
             background: white;
-            border-radius: var(--border-radius);
-            border: 2px solid var(--gray-200);
+            border-radius: 18px;
+            border: 2px solid #e5e7eb;
+            overflow: hidden;
         }
-        .agent-panel.active { display: block; }
-
-        .panel-header {
-            padding: 18px 22px;
-            border-bottom: 2px solid var(--gray-200);
+        .card-header {
             display: flex;
             align-items: center;
             gap: 14px;
+            padding: 18px 20px;
+            border-bottom: 2px solid #f0f0f0;
         }
-        .panel-icon {
-            width: 46px; height: 46px;
-            border-radius: 12px;
+        .card-icon {
+            width: 48px; height: 48px;
+            border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            flex-shrink: 0;
+            font-size: 24px; flex-shrink: 0;
         }
-        .panel-header h2 { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
-        .panel-header p  { font-size: 13px; color: var(--gray-400); }
-        .panel-body { padding: 20px 22px; }
+        .card-header h2 { font-size: 17px; font-weight: 800; margin-bottom: 3px; }
+        .card-header p  { font-size: 12px; color: #9ca3af; line-height: 1.4; }
+        .card-body { padding: 18px 20px; }
 
-        .panel-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+        /* ===== TWO-COL GRID ===== */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .field-label { font-size: 12px; font-weight: 700; color: #4b5563; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: .04em; }
+        .field-group { display: flex; flex-direction: column; }
 
-        /* ===== FORM ELEMENTS ===== */
-        .ai-textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 12px;
-            border: 2px solid var(--gray-200);
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-            line-height: 1.5;
-            color: var(--dark);
-            background: #fafafa;
-            transition: border-color 0.15s;
+        /* ===== TEXTAREAS & RESULTS ===== */
+        .ai-input {
+            width: 100%; min-height: 130px; padding: 12px;
+            border: 2px solid #e5e7eb; border-radius: 12px;
+            font-family: 'Courier New', monospace; font-size: 13px;
+            resize: vertical; line-height: 1.5; color: #111;
+            background: #fafafa; transition: border-color .15s;
             -webkit-text-size-adjust: 100%;
         }
-        .ai-textarea:focus { outline: none; border-color: var(--green); background: white; }
-        .ai-textarea.error-box { min-height: 70px; font-family: var(--font); }
-        .ai-result {
-            width: 100%;
-            min-height: 150px;
-            padding: 14px;
-            border: 2px solid var(--gray-200);
-            border-radius: 10px;
-            font-size: 13px;
-            line-height: 1.7;
-            color: var(--dark);
-            background: #f8fff4;
-            white-space: pre-wrap;
-            word-break: break-word;
-            overflow-y: auto;
-            max-height: 460px;
-        }
-        .ai-result.loading  { color: var(--gray-400); font-style: italic; }
-        .ai-result.error-result { background: #fff4f4; color: var(--red); }
-        .field-label { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 8px; display: block; }
-        .field-group { display: flex; flex-direction: column; }
-        .agent-action-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-        .agent-select {
-            padding: 9px 14px; border: 2px solid var(--gray-200); border-radius: 10px;
-            font-size: 14px; font-weight: 600; color: var(--dark); background: white; cursor: pointer;
-        }
-        .agent-select:focus { outline: none; border-color: var(--green); }
+        .ai-input.prose { font-family: inherit; }
+        .ai-input:focus { outline: none; border-color: var(--green); background: white; }
+        .ai-input.sm { min-height: 70px; }
 
-        .btn-agent {
-            padding: 10px 20px; background: var(--green); color: white; border: none;
-            border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-            transition: background 0.15s;
+        .ai-result {
+            width: 100%; min-height: 130px; padding: 14px;
+            border: 2px solid #e5e7eb; border-radius: 12px;
+            font-size: 13px; line-height: 1.7; color: #111;
+            background: #f8fff4; white-space: pre-wrap;
+            word-break: break-word; overflow-y: auto; max-height: 400px;
         }
-        .btn-agent:hover { background: var(--green-dark); }
-        .btn-agent:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-agent.red    { background: var(--red); }
-        .btn-agent.red:hover  { background: #e04040; }
-        .btn-agent.blue   { background: #1CB0F6; }
-        .btn-agent.blue:hover { background: #0e8fc4; }
-        .btn-agent.purple { background: var(--purple); }
-        .btn-agent.purple:hover { background: #b060e0; }
-        .btn-agent.orange { background: var(--orange); }
-        .btn-agent.orange:hover { background: #e08500; }
+        .ai-result.loading { color: #9ca3af; font-style: italic; background: #fafafa; }
+        .ai-result.err     { background: #fff4f4; color: #dc2626; }
+        .ai-result.cafe    { background: #fff8ee; border-color: #fed7aa; }
+
+        /* ===== BUTTONS ===== */
+        .btn-action {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 11px 20px; border: none; border-radius: 12px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: all .15s; white-space: nowrap;
+        }
+        .btn-action:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-green  { background: #58CC02; color: white; }
+        .btn-green:not(:disabled):hover  { background: #46A302; }
+        .btn-blue   { background: #1CB0F6; color: white; }
+        .btn-blue:not(:disabled):hover   { background: #0e8fc4; }
+        .btn-red    { background: #FF4B4B; color: white; }
+        .btn-red:not(:disabled):hover    { background: #e03030; }
+        .btn-purple { background: #CE82FF; color: white; }
+        .btn-purple:not(:disabled):hover { background: #b060e0; }
+        .btn-orange { background: var(--cafe-orange); color: white; }
+        .btn-orange:not(:disabled):hover { background: #e08000; }
+        .btn-gray   { background: #f3f4f6; color: #374151; border: 2px solid #e5e7eb; }
+        .btn-gray:not(:disabled):hover   { border-color: var(--green); color: var(--green); }
+
+        .action-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+        .select-field {
+            padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 12px;
+            font-size: 14px; font-weight: 600; background: white; cursor: pointer;
+        }
+        .select-field:focus { outline: none; border-color: var(--green); }
 
         /* ===== CHAT ===== */
-        .chat-area {
-            min-height: 200px; max-height: 340px; overflow-y: auto;
-            border: 2px solid var(--gray-200); border-radius: 10px;
-            padding: 14px; margin-bottom: 12px; background: #fafafa;
+        .chat-box {
+            min-height: 180px; max-height: 320px; overflow-y: auto;
+            border: 2px solid #e5e7eb; border-radius: 12px;
+            padding: 12px; margin-bottom: 10px; background: #fafafa;
             display: flex; flex-direction: column; gap: 8px;
         }
-        .chat-bubble {
-            max-width: 82%; padding: 10px 14px; border-radius: 12px;
-            font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+        .msg {
+            max-width: 84%; padding: 10px 14px; border-radius: 14px;
+            font-size: 13px; line-height: 1.6; word-break: break-word;
         }
-        .chat-bubble.bot  { background: #EEF9E4; border-bottom-left-radius: 2px; align-self: flex-start; }
-        .chat-bubble.user { background: var(--green); color: white; border-bottom-right-radius: 2px; align-self: flex-end; }
-        .chat-bubble.typing span {
+        .msg.bot  { background: #EEF9E4; border-bottom-left-radius: 4px; align-self: flex-start; }
+        .msg.user { background: var(--green); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+        .msg.bot.cafe { background: #FFF3E0; border-left: 3px solid var(--cafe-orange); }
+        .msg.typing span {
             display: inline-block; width: 6px; height: 6px;
-            background: var(--gray-400); border-radius: 50%; margin: 0 2px;
-            animation: bounce 1s infinite;
+            background: #9ca3af; border-radius: 50%; margin: 0 2px;
+            animation: dot 1s infinite;
         }
-        .chat-bubble.typing span:nth-child(2) { animation-delay: 0.2s; }
-        .chat-bubble.typing span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+        .msg.typing span:nth-child(2) { animation-delay: .2s; }
+        .msg.typing span:nth-child(3) { animation-delay: .4s; }
+        @keyframes dot { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
         .chat-input-row { display: flex; gap: 8px; }
-        .chat-input {
-            flex: 1; padding: 10px 14px; border: 2px solid var(--gray-200);
-            border-radius: 10px; font-size: 14px;
+        .chat-text-input {
+            flex: 1; padding: 10px 14px; border: 2px solid #e5e7eb;
+            border-radius: 12px; font-size: 14px;
         }
-        .chat-input:focus { outline: none; border-color: var(--green); }
+        .chat-text-input:focus { outline: none; border-color: var(--green); }
 
-        /* ===== CHALLENGE ===== */
-        .challenge-options { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-        .challenge-field  { flex: 1; min-width: 150px; }
+        /* ===== CAFE MODE ===== */
+        .cafe-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .cafe-option-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 18px 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all .2s;
+        }
+        .cafe-option-card:hover,
+        .cafe-option-card.active { border-color: var(--cafe-orange); background: #fff8ee; }
+        .cafe-option-card .c-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        .cafe-option-card h3 { font-size: 14px; font-weight: 800; margin-bottom: 4px; color: #111; }
+        .cafe-option-card p  { font-size: 12px; color: #9ca3af; line-height: 1.4; }
+
+        .cafe-panel { display: none; }
+        .cafe-panel.active { display: block; }
+
+        /* quiz chips */
+        .quiz-topics { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+        .quiz-chip {
+            padding: 7px 14px; border-radius: 20px;
+            border: 2px solid #e5e7eb; background: white;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all .15s;
+        }
+        .quiz-chip:hover, .quiz-chip.sel { background: var(--cafe-orange); border-color: var(--cafe-orange); color: white; }
+
+        /* ===== AGENT PANELS ===== */
+        .agent-panel { display: none; }
+        .agent-panel.active { display: block; }
 
         /* ===== DARK MODE ===== */
-        .dark-mode .agent-tab { background: #2a2a2a; border-color: #333; color: #ccc; }
-        .dark-mode .agent-tab.active { background: var(--green); color: white; border-color: var(--green); }
-        .dark-mode .agent-panel { background: #1f1f1f; border-color: #333; }
-        .dark-mode .panel-header { border-color: #333; }
-        .dark-mode .panel-header h2 { color: #e0e0e0; }
-        .dark-mode .ai-textarea { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
-        .dark-mode .ai-textarea:focus { border-color: var(--green); background: #333; }
+        .dark-mode body { background: #111; }
+        .dark-mode .agents-hero { background: linear-gradient(135deg, #2d6e01 0%, #0a5e88 100%); }
+        .dark-mode .mode-switcher, .dark-mode .agent-card, .dark-mode .cafe-option-card { background: #1f1f1f; border-color: #333; }
+        .dark-mode .mode-btn { color: #888; }
+        .dark-mode .agent-tab { background: #2a2a2a; border-color: #333; color: #aaa; }
+        .dark-mode .agent-tab.active { background: var(--green); color: white; }
+        .dark-mode .card-header { border-color: #333; }
+        .dark-mode .card-header h2, .dark-mode .card-header p { color: #ccc; }
+        .dark-mode .ai-input { background: #2a2a2a; border-color: #444; color: #ddd; }
+        .dark-mode .ai-input:focus { border-color: var(--green); background: #333; }
         .dark-mode .ai-result { background: #1a2d1a; border-color: #333; color: #d0f0d0; }
-        .dark-mode .ai-result.error-result { background: #3a1a1a; color: #ff8080; }
-        .dark-mode .field-label { color: #ccc; }
-        .dark-mode .agent-select { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
-        .dark-mode .chat-area { background: #2a2a2a; border-color: #444; }
-        .dark-mode .chat-bubble.bot { background: #1a3a1a; color: #d0f0d0; }
-        .dark-mode .chat-input { background: #2a2a2a; border-color: #444; color: #e0e0e0; }
+        .dark-mode .ai-result.loading { background: #1f1f1f; color: #666; }
+        .dark-mode .ai-result.err { background: #2d1a1a; }
+        .dark-mode .ai-result.cafe { background: #2d2210; border-color: #5a3f1a; }
+        .dark-mode .chat-box { background: #222; border-color: #333; }
+        .dark-mode .msg.bot { background: #1a3a1a; color: #d0f0d0; }
+        .dark-mode .msg.bot.cafe { background: #2d1e0e; border-color: var(--cafe-orange); }
+        .dark-mode .chat-text-input { background: #2a2a2a; border-color: #444; color: #ddd; }
+        .dark-mode .select-field { background: #2a2a2a; border-color: #444; color: #ddd; }
+        .dark-mode .field-label { color: #9ca3af; }
+        .dark-mode .quiz-chip { background: #2a2a2a; border-color: #444; color: #bbb; }
+        .dark-mode .cafe-option-card { background: #2a2a2a; }
+        .dark-mode .cafe-option-card:hover, .dark-mode .cafe-option-card.active { background: #2d1e0e; }
+        .dark-mode .cafe-option-card h3 { color: #ddd; }
+        .dark-mode .btn-gray { background: #2a2a2a; border-color: #444; color: #ccc; }
 
         /* ===== MOBILE ===== */
-        @media (max-width: 700px) {
-            .agents-layout { padding: 16px 14px 80px; }
-            .agents-header h1 { font-size: 22px; }
-            .agents-tabs { gap: 6px; justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
-            .agent-tab { font-size: 12px; padding: 8px 12px; }
-            .panel-body { padding: 14px 14px; }
-            .panel-row { grid-template-columns: 1fr; }
-            .ai-textarea { min-height: 120px; font-size: 14px; }
-            .ai-result { max-height: none; min-height: 100px; }
-            .panel-header { padding: 14px; }
-            .chat-area { min-height: 160px; max-height: 240px; }
-            .challenge-options { flex-direction: column; }
-            .challenge-field { min-width: 0; width: 100%; }
-            .btn-agent { width: 100%; justify-content: center; }
-            .agent-action-row { flex-direction: column; align-items: stretch; }
-            .chat-input-row .btn-agent { width: auto; }
+        @media (max-width: 680px) {
+            .agents-page { padding: 12px 12px 90px; }
+            .agents-hero { padding: 18px 14px; border-radius: 14px; }
+            .agents-hero h1 { font-size: 20px; }
+            .mode-btn { font-size: 11px; padding: 8px 4px; }
+            .mode-icon { font-size: 18px; }
+            .two-col { grid-template-columns: 1fr; }
+            .cafe-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .cafe-option-card { padding: 14px 10px; }
+            .cafe-option-card .c-icon { font-size: 26px; }
+            .cafe-option-card h3 { font-size: 12px; }
+            .card-body { padding: 14px; }
+            .card-header { padding: 14px; gap: 10px; }
+            .card-icon { width: 40px; height: 40px; font-size: 20px; }
+            .ai-input { min-height: 110px; font-size: 14px; }
+            .ai-result { max-height: none; font-size: 13px; }
+            .chat-box { min-height: 160px; max-height: 260px; }
+            .action-row { flex-direction: column; align-items: stretch; }
+            .btn-action { width: 100%; }
+            .chat-input-row .btn-action { width: auto; flex-shrink: 0; }
+            .quiz-topics { gap: 6px; }
+            .quiz-chip { font-size: 12px; padding: 6px 11px; }
         }
     </style>
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
 
-<div class="agents-layout">
-    <div class="agents-header">
+<div class="agents-page">
+
+    <!-- Hero -->
+    <div class="agents-hero">
         <h1>🤖 Agentes de IA</h1>
-        <p>Ferramentas de inteligência artificial para turbinar seu aprendizado em Java</p>
+        <p>Professores virtuais que ensinam Java do seu jeito — formal ou descontraído!</p>
     </div>
 
-    <!-- Tabs — data-agent em vez de onclick inline para evitar erros em mobile -->
-    <div class="agents-tabs" id="agents-tab-bar">
-        <button class="agent-tab active" data-agent="chat">
-            <span class="tab-icon">💬</span> JavaBot Chat
+    <!-- Mode Switcher -->
+    <div class="mode-switcher" id="mode-switcher">
+        <button class="mode-btn active" data-mode="formal">
+            <span class="mode-icon">🎓</span>Modo Formal
         </button>
-        <button class="agent-tab" data-agent="debug">
-            <span class="tab-icon">🐛</span> Debugger IA
-        </button>
-        <button class="agent-tab" data-agent="explain">
-            <span class="tab-icon">📖</span> Explicador
-        </button>
-        <button class="agent-tab" data-agent="challenge">
-            <span class="tab-icon">🎯</span> Desafios
-        </button>
-        <button class="agent-tab" data-agent="pseudocode">
-            <span class="tab-icon">📝</span> Pseudo→Java
-        </button>
-        <button class="agent-tab" data-agent="optimize">
-            <span class="tab-icon">⚡</span> Otimizador
+        <button class="mode-btn cafe" data-mode="cafe">
+            <span class="mode-icon">☕</span>JavaCafé
         </button>
     </div>
 
-    <!-- ===== Panel: JavaBot Chat ===== -->
-    <div class="agent-panel active" id="panel-chat">
-        <div class="panel-header">
-            <div class="panel-icon" style="background:#EEF9E4;">💬</div>
-            <div>
-                <h2>JavaBot — Tutor de Java</h2>
-                <p>Tire dúvidas sobre variáveis, loops, OOP, coleções, exceções... qualquer coisa!</p>
+    <!-- ==================== MODO FORMAL ==================== -->
+    <div class="mode-panel active" id="mode-formal">
+
+        <!-- Agent Tabs -->
+        <div class="agent-tabs-wrap">
+            <div class="agent-tabs" id="formal-tab-bar">
+                <button class="agent-tab active" data-agent="chat">💬 JavaBot Chat</button>
+                <button class="agent-tab" data-agent="debug">🐛 Debugger IA</button>
+                <button class="agent-tab" data-agent="explain">📖 Explicador</button>
+                <button class="agent-tab" data-agent="challenge">🎯 Desafios</button>
+                <button class="agent-tab" data-agent="pseudocode">📝 Pseudo→Java</button>
+                <button class="agent-tab" data-agent="optimize">⚡ Otimizador</button>
             </div>
         </div>
-        <div class="panel-body">
-            <div class="chat-area" id="agent-chat-messages">
-                <div class="chat-bubble bot">
-                    Olá! Sou o <strong>JavaBot</strong>, seu tutor de Java 🤖☕<br>
-                    Pergunte sobre qualquer coisa de Java!
+
+        <!-- Panel: Chat -->
+        <div class="agent-panel active" id="panel-chat">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#EEF9E4;">💬</div>
+                    <div>
+                        <h2>JavaBot — Tutor de Java</h2>
+                        <p>Tire dúvidas sobre variáveis, loops, OOP, coleções, exceções...</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chat-box" id="formal-chat-msgs">
+                        <div class="msg bot">Olá! Sou o <strong>JavaBot</strong> 🤖☕ — pergunte qualquer coisa sobre Java!</div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input id="formal-chat-input" class="chat-text-input"
+                               placeholder="Ex: Como funciona a herança em Java?" maxlength="500">
+                        <button class="btn-action btn-green" id="formal-chat-btn" onclick="sendFormalChat()">➤</button>
+                    </div>
                 </div>
             </div>
-            <div class="chat-input-row">
-                <input type="text" id="agent-chat-input" class="chat-input"
-                       placeholder="Ex: Como funciona a herança em Java?" maxlength="500">
-                <button class="btn-agent" id="chat-send-btn" onclick="sendAgentChat()">➤</button>
-            </div>
         </div>
-    </div>
 
-    <!-- ===== Panel: Debugger ===== -->
-    <div class="agent-panel" id="panel-debug">
-        <div class="panel-header">
-            <div class="panel-icon" style="background:#FFE4E4;">🐛</div>
-            <div>
-                <h2>Debugger IA</h2>
-                <p>Cole seu código e a mensagem de erro. A IA identifica o problema e mostra como corrigir.</p>
-            </div>
-        </div>
-        <div class="panel-body">
-            <div class="agent-action-row">
-                <button class="btn-agent red" id="debug-btn" onclick="runDebug()">🐛 Debugar com IA</button>
-            </div>
-            <div class="panel-row">
-                <div class="field-group">
-                    <label class="field-label">Código Java com problema</label>
-                    <textarea id="debug-code" class="ai-textarea"
-                              spellcheck="false" autocorrect="off" autocapitalize="none">public class Main {
+        <!-- Panel: Debugger -->
+        <div class="agent-panel" id="panel-debug">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#FFE4E4;">🐛</div>
+                    <div>
+                        <h2>Debugger IA</h2>
+                        <p>Cole seu código + erro. A IA identifica o problema e mostra como corrigir.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <button class="btn-action btn-red" id="debug-btn" onclick="runDebug()">🐛 Debugar com IA</button>
+                    </div>
+                    <div class="two-col">
+                        <div class="field-group">
+                            <label class="field-label">Código com problema</label>
+                            <textarea id="debug-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none">public class Main {
     public static void main(String[] args) {
         int[] nums = {1, 2, 3};
         System.out.println(nums[5]);
     }
 }</textarea>
-                    <label class="field-label" style="margin-top:12px;">Mensagem de erro (opcional)</label>
-                    <textarea id="debug-error" class="ai-textarea error-box"
-                              spellcheck="false" autocorrect="off"
-                              placeholder="Ex: ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 3"></textarea>
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Análise e solução</label>
-                    <div id="debug-result" class="ai-result loading">Clique em "Debugar com IA" para analisar o erro...</div>
+                            <label class="field-label" style="margin-top:10px;">Mensagem de erro (opcional)</label>
+                            <textarea id="debug-error" class="ai-input sm prose"
+                                      placeholder="Ex: ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 3"></textarea>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Análise e solução</label>
+                            <div id="debug-result" class="ai-result loading">Clique em "Debugar com IA" para analisar o erro...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- ===== Panel: Explicador ===== -->
-    <div class="agent-panel" id="panel-explain">
-        <div class="panel-header">
-            <div class="panel-icon" style="background:#EEF4FF;">📖</div>
-            <div>
-                <h2>Explicador de Código</h2>
-                <p>Cole qualquer código Java e receba uma explicação linha por linha para iniciantes.</p>
-            </div>
-        </div>
-        <div class="panel-body">
-            <div class="agent-action-row">
-                <button class="btn-agent blue" id="explain-btn" onclick="runExplain()">📖 Explicar Código</button>
-            </div>
-            <div class="panel-row">
-                <div class="field-group">
-                    <label class="field-label">Código para explicar</label>
-                    <textarea id="explain-code" class="ai-textarea"
-                              spellcheck="false" autocorrect="off" autocapitalize="none">public class Fatorial {
+        <!-- Panel: Explicador -->
+        <div class="agent-panel" id="panel-explain">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#EEF4FF;">📖</div>
+                    <div>
+                        <h2>Explicador de Código</h2>
+                        <p>Cole qualquer código Java e receba uma explicação linha por linha.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <button class="btn-action btn-blue" id="explain-btn" onclick="runExplain()">📖 Explicar Código</button>
+                    </div>
+                    <div class="two-col">
+                        <div class="field-group">
+                            <label class="field-label">Código para explicar</label>
+                            <textarea id="explain-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none">public class Fatorial {
     static int fatorial(int n) {
         if (n <= 1) return 1;
         return n * fatorial(n - 1);
@@ -324,111 +423,106 @@
         System.out.println(fatorial(5));
     }
 }</textarea>
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Explicação linha a linha</label>
-                    <div id="explain-result" class="ai-result loading">Clique em "Explicar Código" para ver a explicação...</div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Explicação linha a linha</label>
+                            <div id="explain-result" class="ai-result loading">Clique em "Explicar Código" para ver a explicação...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- ===== Panel: Gerador de Desafios ===== -->
-    <div class="agent-panel" id="panel-challenge">
-        <div class="panel-header">
-            <div class="panel-icon" style="background:#FFF4E0;">🎯</div>
-            <div>
-                <h2>Gerador de Desafios</h2>
-                <p>Escolha um tópico e dificuldade e receba um desafio personalizado para praticar.</p>
+        <!-- Panel: Desafios -->
+        <div class="agent-panel" id="panel-challenge">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#FFF4E0;">🎯</div>
+                    <div>
+                        <h2>Gerador de Desafios</h2>
+                        <p>Escolha tópico e dificuldade — receba um desafio personalizado.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <select id="challenge-topic" class="select-field">
+                            <option>Variáveis e Tipos</option>
+                            <option>Operadores</option>
+                            <option>Condicionais (if/else/switch)</option>
+                            <option>Loops (for/while/do-while)</option>
+                            <option>Arrays e Listas</option>
+                            <option>Métodos e Funções</option>
+                            <option>Orientação a Objetos</option>
+                            <option>Herança e Polimorfismo</option>
+                            <option>Interfaces e Classes Abstratas</option>
+                            <option>Exceções (try/catch)</option>
+                            <option>Collections (Map, Set, List)</option>
+                            <option>Strings</option>
+                            <option>Recursão</option>
+                            <option>Stream API</option>
+                        </select>
+                        <select id="challenge-difficulty" class="select-field">
+                            <option>Iniciante</option>
+                            <option>Intermediário</option>
+                            <option>Avançado</option>
+                        </select>
+                        <button class="btn-action btn-orange" id="challenge-btn" onclick="runChallenge()">🎯 Gerar Desafio</button>
+                    </div>
+                    <label class="field-label">Desafio gerado</label>
+                    <div id="challenge-result" class="ai-result loading" style="min-height:200px;">
+                        Selecione um tópico e clique em "Gerar Desafio"!
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="panel-body">
-            <div class="challenge-options">
-                <div class="challenge-field">
-                    <label class="field-label">Tópico</label>
-                    <select id="challenge-topic" class="agent-select" style="width:100%;">
-                        <option>Variáveis e Tipos</option>
-                        <option>Operadores</option>
-                        <option>Condicionais (if/else/switch)</option>
-                        <option>Loops (for/while/do-while)</option>
-                        <option>Arrays e Listas</option>
-                        <option>Métodos e Funções</option>
-                        <option>Orientação a Objetos</option>
-                        <option>Herança e Polimorfismo</option>
-                        <option>Interfaces e Classes Abstratas</option>
-                        <option>Exceções (try/catch)</option>
-                        <option>Collections (Map, Set, List)</option>
-                        <option>Strings e Manipulação de Texto</option>
-                        <option>Recursão</option>
-                        <option>Algoritmos de Ordenação</option>
-                        <option>Stream API</option>
-                    </select>
-                </div>
-                <div class="challenge-field">
-                    <label class="field-label">Dificuldade</label>
-                    <select id="challenge-difficulty" class="agent-select" style="width:100%;">
-                        <option>Iniciante</option>
-                        <option>Intermediário</option>
-                        <option>Avançado</option>
-                    </select>
-                </div>
-                <div class="challenge-field" style="display:flex;align-items:flex-end;">
-                    <button class="btn-agent orange" id="challenge-btn" onclick="runChallenge()" style="width:100%;justify-content:center;">🎯 Gerar Desafio</button>
-                </div>
-            </div>
-            <label class="field-label">Desafio gerado</label>
-            <div id="challenge-result" class="ai-result loading" style="min-height:240px;">
-                Selecione um tópico e clique em "Gerar Desafio" para receber seu desafio personalizado!
-            </div>
-        </div>
-    </div>
 
-    <!-- ===== Panel: Pseudo → Java ===== -->
-    <div class="agent-panel" id="panel-pseudocode">
-        <div class="panel-header">
-            <div class="panel-icon" style="background:#F4EEFF;">📝</div>
-            <div>
-                <h2>Pseudocódigo → Java</h2>
-                <p>Descreva um algoritmo em português e receba o código Java completo.</p>
+        <!-- Panel: Pseudo→Java -->
+        <div class="agent-panel" id="panel-pseudocode">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#F4EEFF;">📝</div>
+                    <div>
+                        <h2>Pseudocódigo → Java</h2>
+                        <p>Descreva um algoritmo em português e receba o código Java completo.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <button class="btn-action btn-purple" id="pseudocode-btn" onclick="runPseudocode()">📝 Converter para Java</button>
+                    </div>
+                    <div class="two-col">
+                        <div class="field-group">
+                            <label class="field-label">Descreva em português</label>
+                            <textarea id="pseudocode-input" class="ai-input prose" spellcheck="false"
+                                      placeholder="Ex:&#10;1. Ler uma lista de números&#10;2. Encontrar o maior e menor valor&#10;3. Calcular a média&#10;4. Imprimir os resultados"></textarea>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Código Java gerado</label>
+                            <div id="pseudocode-result" class="ai-result loading">Descreva o algoritmo e clique em "Converter para Java"...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="panel-body">
-            <div class="agent-action-row">
-                <button class="btn-agent purple" id="pseudocode-btn" onclick="runPseudocode()">📝 Converter para Java</button>
-            </div>
-            <div class="panel-row">
-                <div class="field-group">
-                    <label class="field-label">Pseudocódigo ou descrição</label>
-                    <textarea id="pseudocode-input" class="ai-textarea"
-                              spellcheck="false" autocorrect="off"
-                              placeholder="Descreva o algoritmo em português. Exemplo:&#10;&#10;1. Lê uma lista de números&#10;2. Encontra o maior e menor valor&#10;3. Calcula a média&#10;4. Imprime os resultados"></textarea>
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Código Java gerado</label>
-                    <div id="pseudocode-result" class="ai-result loading">Descreva o algoritmo e clique em "Converter para Java"...</div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- ===== Panel: Otimizador ===== -->
-    <div class="agent-panel" id="panel-optimize">
-        <div class="panel-header">
-            <div class="panel-icon" style="background:#E0F8FF;">⚡</div>
-            <div>
-                <h2>Otimizador de Código</h2>
-                <p>Cole seu código Java e receba uma versão otimizada com boas práticas.</p>
-            </div>
-        </div>
-        <div class="panel-body">
-            <div class="agent-action-row">
-                <button class="btn-agent blue" id="optimize-btn" onclick="runOptimize()">⚡ Otimizar Código</button>
-            </div>
-            <div class="panel-row">
-                <div class="field-group">
-                    <label class="field-label">Código original</label>
-                    <textarea id="optimize-code" class="ai-textarea"
-                              spellcheck="false" autocorrect="off" autocapitalize="none">public class Soma {
+        <!-- Panel: Otimizador -->
+        <div class="agent-panel" id="panel-optimize">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#E0F8FF;">⚡</div>
+                    <div>
+                        <h2>Otimizador de Código</h2>
+                        <p>Cole seu código Java e receba uma versão com boas práticas e melhorias.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <button class="btn-action btn-blue" id="optimize-btn" onclick="runOptimize()">⚡ Otimizar Código</button>
+                    </div>
+                    <div class="two-col">
+                        <div class="field-group">
+                            <label class="field-label">Código original</label>
+                            <textarea id="optimize-code" class="ai-input" spellcheck="false" autocorrect="off" autocapitalize="none">public class Soma {
     public static void main(String[] args) {
         int[] numeros = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         int soma = 0;
@@ -438,108 +532,336 @@
         System.out.println("A soma e: " + soma);
     }
 }</textarea>
-                </div>
-                <div class="field-group">
-                    <label class="field-label">Versão otimizada + melhorias</label>
-                    <div id="optimize-result" class="ai-result loading">Clique em "Otimizar Código" para ver as melhorias...</div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Versão otimizada + melhorias</label>
+                            <div id="optimize-result" class="ai-result loading">Clique em "Otimizar Código" para ver as melhorias...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <!-- /modo formal -->
+
+    <!-- ==================== JAVA CAFÉ ==================== -->
+    <div class="mode-panel" id="mode-cafe">
+
+        <!-- Cafe sub-options -->
+        <div class="cafe-grid" id="cafe-menu">
+            <div class="cafe-option-card active" data-cafe="chat-cafe" onclick="switchCafe('chat-cafe', this)">
+                <span class="c-icon">☕</span>
+                <h3>Chat Descontraído</h3>
+                <p>Conversa casual sobre Java com analogias e humor</p>
+            </div>
+            <div class="cafe-option-card" data-cafe="analogy" onclick="switchCafe('analogy', this)">
+                <span class="c-icon">🎭</span>
+                <h3>Analogia do Dia</h3>
+                <p>Aprenda por meio de comparações criativas do cotidiano</p>
+            </div>
+            <div class="cafe-option-card" data-cafe="quiz" onclick="switchCafe('quiz', this)">
+                <span class="c-icon">🎮</span>
+                <h3>Quiz Rápido</h3>
+                <p>5 perguntas divertidas para testar seu conhecimento</p>
+            </div>
+            <div class="cafe-option-card" data-cafe="facts" onclick="switchCafe('facts', this)">
+                <span class="c-icon">🤯</span>
+                <h3>Fatos Curiosos</h3>
+                <p>Curiosidades inusitadas sobre Java que você não sabia</p>
+            </div>
+        </div>
+
+        <!-- Cafe Panel: Chat -->
+        <div class="cafe-panel active" id="cafe-chat-cafe">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#FFF3E0;">☕</div>
+                    <div>
+                        <h2>JavaCafé — Bate-Papo Descontraído</h2>
+                        <p>Explico Java com analogias, humor e 0% de formalidade</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chat-box" id="cafe-chat-msgs">
+                        <div class="msg bot cafe">
+                            E aí! 👋 Sou o <strong>JavaCafé</strong> — seu professor caféoléctico de Java!<br><br>
+                            Me pergunta qualquer coisa. Prometo explicar sem deixar você dormir! ☕😄
+                        </div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input id="cafe-chat-input" class="chat-text-input"
+                               placeholder="Ex: O que é OOP? Por que Java é assim?" maxlength="500">
+                        <button class="btn-action btn-orange" id="cafe-chat-btn" onclick="sendCafeChat()">➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cafe Panel: Analogia -->
+        <div class="cafe-panel" id="cafe-analogy">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#FFF3E0;">🎭</div>
+                    <div>
+                        <h2>Analogia do Dia</h2>
+                        <p>Aprenda Java através de comparações criativas com o mundo real</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <input id="analogy-concept" class="chat-text-input" style="flex:1;"
+                               placeholder="Ex: herança, interface, thread, ArrayList..." maxlength="200">
+                        <button class="btn-action btn-orange" id="analogy-btn" onclick="runAnalogy()">🎭 Criar Analogia</button>
+                    </div>
+                    <label class="field-label">Analogia criativa</label>
+                    <div id="analogy-result" class="ai-result loading cafe" style="min-height:180px;">
+                        Digite um conceito Java e veja a analogia mais criativa que você já leu! 🎨
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cafe Panel: Quiz -->
+        <div class="cafe-panel" id="cafe-quiz">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#FFF3E0;">🎮</div>
+                    <div>
+                        <h2>Quiz Rápido</h2>
+                        <p>5 perguntas divertidas sobre Java — testando quanto você sabe!</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="quiz-topics" id="quiz-topics">
+                        <button class="quiz-chip sel" data-topic="Orientação a Objetos">OOP</button>
+                        <button class="quiz-chip" data-topic="Arrays e Coleções">Arrays</button>
+                        <button class="quiz-chip" data-topic="Strings">Strings</button>
+                        <button class="quiz-chip" data-topic="Exceções">Exceções</button>
+                        <button class="quiz-chip" data-topic="Loops">Loops</button>
+                        <button class="quiz-chip" data-topic="Herança">Herança</button>
+                        <button class="quiz-chip" data-topic="Stream API">Streams</button>
+                        <button class="quiz-chip" data-topic="Conceitos gerais de Java">Geral</button>
+                    </div>
+                    <div class="action-row">
+                        <button class="btn-action btn-orange" id="quiz-btn" onclick="runQuiz()">🎮 Gerar Quiz!</button>
+                    </div>
+                    <label class="field-label">Suas perguntas</label>
+                    <div id="quiz-result" class="ai-result loading cafe" style="min-height:220px;">
+                        Selecione um tópico e clique em "Gerar Quiz" para começar! 🚀
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cafe Panel: Facts -->
+        <div class="cafe-panel" id="cafe-facts">
+            <div class="agent-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background:#FFF3E0;">🤯</div>
+                    <div>
+                        <h2>Fatos Curiosos sobre Java</h2>
+                        <p>Curiosidades que farão você pensar "nossa, não sabia disso!"</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="action-row">
+                        <button class="btn-action btn-orange" id="facts-btn" onclick="runFacts()">🤯 Surpreenda-me!</button>
+                    </div>
+                    <label class="field-label">5 fatos que vão te surpreender</label>
+                    <div id="facts-result" class="ai-result loading cafe" style="min-height:200px;">
+                        Clique em "Surpreenda-me" para descobrir fatos incríveis sobre Java! 🤩
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- /cafe -->
+
+</div><!-- /agents-page -->
 
 <script th:src="@{/js/app.js}"></script>
 <script>
-// ===== Tab switching via data-agent — sem seletores frágeis de onclick =====
-document.getElementById('agents-tab-bar').addEventListener('click', function(e) {
+// ===== MODE SWITCHER =====
+document.getElementById('mode-switcher').addEventListener('click', function(e) {
+    var btn = e.target.closest('.mode-btn');
+    if (!btn) return;
+    var mode = btn.dataset.mode;
+    document.querySelectorAll('.mode-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.mode-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var panel = document.getElementById('mode-' + mode);
+    if (panel) panel.classList.add('active');
+});
+
+// ===== FORMAL: tab switching =====
+document.getElementById('formal-tab-bar').addEventListener('click', function(e) {
     var btn = e.target.closest('.agent-tab');
     if (!btn) return;
     var name = btn.dataset.agent;
-    if (!name) return;
-
     document.querySelectorAll('.agent-tab').forEach(function(t) { t.classList.remove('active'); });
     document.querySelectorAll('.agent-panel').forEach(function(p) { p.classList.remove('active'); });
-
     btn.classList.add('active');
     var panel = document.getElementById('panel-' + name);
     if (panel) {
         panel.classList.add('active');
-        // Scroll suave ao painel no mobile
-        if (window.innerWidth <= 700) {
-            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (window.innerWidth <= 680) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 });
 
-// ===== JavaBot Chat =====
-function sendAgentChat() {
-    var input = document.getElementById('agent-chat-input');
+// ===== FORMAL: Chat =====
+function sendFormalChat() {
+    var input = document.getElementById('formal-chat-input');
     var msg = input.value.trim();
     if (!msg) return;
     input.value = '';
-
-    addChatMsg(msg, 'user');
-
-    var tid = 'typing-' + Date.now();
-    var area = document.getElementById('agent-chat-messages');
-    var typingEl = document.createElement('div');
-    typingEl.className = 'chat-bubble typing';
-    typingEl.id = tid;
-    typingEl.innerHTML = '<span></span><span></span><span></span>';
-    area.appendChild(typingEl);
-    area.scrollTop = area.scrollHeight;
-
-    var btn = document.getElementById('chat-send-btn');
+    addMsg('formal-chat-msgs', msg, 'user');
+    var tid = addTyping('formal-chat-msgs');
+    var btn = document.getElementById('formal-chat-btn');
     if (btn) btn.disabled = true;
-
-    fetch('/api/javabot/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        var el = document.getElementById(tid);
-        if (el) el.remove();
-        addChatMsg(data.response || 'Sem resposta.', 'bot');
+    fetchAgent('/api/javabot/chat', { message: msg }, function(data) {
+        removeEl(tid);
+        addMsg('formal-chat-msgs', data.response || 'Sem resposta.', 'bot');
         if (btn) btn.disabled = false;
-    })
-    .catch(function() {
-        var el = document.getElementById(tid);
-        if (el) el.remove();
-        addChatMsg('Erro ao conectar. Verifique sua conexão.', 'bot');
+    }, function() {
+        removeEl(tid);
+        addMsg('formal-chat-msgs', 'Erro ao conectar. Tente novamente.', 'bot');
+        if (btn) btn.disabled = false;
+    });
+}
+document.getElementById('formal-chat-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); sendFormalChat(); }
+});
+
+// ===== FORMAL: Agents =====
+function callFormalAgent(endpoint, payload, resultId, btnId, loading) {
+    var el = document.getElementById(resultId);
+    var btn = btnId ? document.getElementById(btnId) : null;
+    if (!el) return;
+    el.className = 'ai-result loading';
+    el.textContent = loading || 'Processando...';
+    if (btn) btn.disabled = true;
+    fetchAgent(endpoint, payload, function(data) {
+        el.className = 'ai-result';
+        el.textContent = data.result || data.review || data.response || 'Sem resposta.';
+        if (btn) btn.disabled = false;
+        if (window.innerWidth <= 680) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, function(err) {
+        el.className = 'ai-result err';
+        el.textContent = 'Erro ao conectar ao servidor de IA. Tente novamente. (' + err + ')';
         if (btn) btn.disabled = false;
     });
 }
 
-function addChatMsg(text, type) {
-    var area = document.getElementById('agent-chat-messages');
-    var div = document.createElement('div');
-    div.className = 'chat-bubble ' + type;
-    if (type === 'user') {
-        div.textContent = text;
-    } else {
-        div.innerHTML = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-                            .replace(/\n/g, '<br>');
-    }
-    area.appendChild(div);
-    area.scrollTop = area.scrollHeight;
+function runDebug() {
+    var code = document.getElementById('debug-code').value.trim();
+    var error = document.getElementById('debug-error').value.trim();
+    if (!code) return;
+    callFormalAgent('/api/javabot/debug', { code: code, error: error }, 'debug-result', 'debug-btn', '🐛 Analisando o erro...');
+}
+function runExplain() {
+    var code = document.getElementById('explain-code').value.trim();
+    if (!code) return;
+    callFormalAgent('/api/javabot/explain', { code: code }, 'explain-result', 'explain-btn', '📖 Explicando linha a linha...');
+}
+function runChallenge() {
+    var topic = document.getElementById('challenge-topic').value;
+    var diff   = document.getElementById('challenge-difficulty').value;
+    callFormalAgent('/api/javabot/challenge', { topic: topic, difficulty: diff }, 'challenge-result', 'challenge-btn', '🎯 Gerando desafio...');
+}
+function runPseudocode() {
+    var pseudo = document.getElementById('pseudocode-input').value.trim();
+    if (!pseudo) return;
+    callFormalAgent('/api/javabot/pseudocode', { pseudocode: pseudo }, 'pseudocode-result', 'pseudocode-btn', '📝 Convertendo para Java...');
+}
+function runOptimize() {
+    var code = document.getElementById('optimize-code').value.trim();
+    if (!code) return;
+    callFormalAgent('/api/javabot/optimize', { code: code }, 'optimize-result', 'optimize-btn', '⚡ Otimizando...');
 }
 
-document.getElementById('agent-chat-input').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); sendAgentChat(); }
+// ===== CAFÉ: sub-panel switching =====
+function switchCafe(name, el) {
+    document.querySelectorAll('.cafe-option-card').forEach(function(c) { c.classList.remove('active'); });
+    document.querySelectorAll('.cafe-panel').forEach(function(p) { p.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    var panel = document.getElementById('cafe-' + name);
+    if (panel) {
+        panel.classList.add('active');
+        if (window.innerWidth <= 680) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// ===== CAFÉ: Chat =====
+function sendCafeChat() {
+    var input = document.getElementById('cafe-chat-input');
+    var msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    addMsg('cafe-chat-msgs', msg, 'user');
+    var tid = addTyping('cafe-chat-msgs');
+    var btn = document.getElementById('cafe-chat-btn');
+    if (btn) btn.disabled = true;
+    fetchAgent('/api/javabot/cafe-chat', { message: msg }, function(data) {
+        removeEl(tid);
+        addMsg('cafe-chat-msgs', data.response || 'Sem resposta.', 'bot cafe');
+        if (btn) btn.disabled = false;
+    }, function() {
+        removeEl(tid);
+        addMsg('cafe-chat-msgs', 'Ops, o café travou! Tente de novo ☕', 'bot cafe');
+        if (btn) btn.disabled = false;
+    });
+}
+document.getElementById('cafe-chat-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); sendCafeChat(); }
 });
 
-// ===== Generic agent call =====
-function callAgent(endpoint, payload, resultId, btnId, loadingText) {
+// ===== CAFÉ: Analogy =====
+function runAnalogy() {
+    var concept = document.getElementById('analogy-concept').value.trim();
+    if (!concept) return;
+    callCafeAgent('/api/javabot/fun-explain', { concept: concept }, 'analogy-result', 'analogy-btn', '🎭 Criando a analogia mais criativa...');
+}
+
+// ===== CAFÉ: Quiz =====
+var selectedQuizTopic = 'Orientação a Objetos';
+document.getElementById('quiz-topics').addEventListener('click', function(e) {
+    var chip = e.target.closest('.quiz-chip');
+    if (!chip) return;
+    document.querySelectorAll('.quiz-chip').forEach(function(c) { c.classList.remove('sel'); });
+    chip.classList.add('sel');
+    selectedQuizTopic = chip.dataset.topic;
+});
+function runQuiz() {
+    callCafeAgent('/api/javabot/quiz', { topic: selectedQuizTopic }, 'quiz-result', 'quiz-btn', '🎮 Gerando quiz divertido...');
+}
+
+// ===== CAFÉ: Facts =====
+function runFacts() {
+    callCafeAgent('/api/javabot/facts', {}, 'facts-result', 'facts-btn', '🤯 Buscando fatos curiosos...');
+}
+
+function callCafeAgent(endpoint, payload, resultId, btnId, loading) {
     var el = document.getElementById(resultId);
     var btn = btnId ? document.getElementById(btnId) : null;
     if (!el) return;
-
-    el.className = 'ai-result loading';
-    el.textContent = loadingText || 'Processando...';
+    el.className = 'ai-result loading cafe';
+    el.textContent = loading || 'Preparando...';
     if (btn) btn.disabled = true;
+    fetchAgent(endpoint, payload, function(data) {
+        el.className = 'ai-result cafe';
+        el.textContent = data.result || data.response || 'Hmm, não recebi resposta... tenta de novo!';
+        if (btn) btn.disabled = false;
+        if (window.innerWidth <= 680) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, function(err) {
+        el.className = 'ai-result err';
+        el.textContent = 'Erro ao conectar. O café derramou! ☕ (' + err + ')';
+        if (btn) btn.disabled = false;
+    });
+}
 
+// ===== SHARED HELPERS =====
+function fetchAgent(endpoint, payload, onSuccess, onError) {
     fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -549,51 +871,44 @@ function callAgent(endpoint, payload, resultId, btnId, loadingText) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
     })
-    .then(function(data) {
-        el.className = 'ai-result';
-        el.textContent = data.result || data.review || data.response || 'Sem resposta.';
-        if (btn) btn.disabled = false;
-        // Scroll ao resultado no mobile
-        if (window.innerWidth <= 700) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    })
-    .catch(function(err) {
-        el.className = 'ai-result error-result';
-        el.textContent = 'Erro ao conectar ao servidor de IA. Tente novamente.\n(' + err.message + ')';
-        if (btn) btn.disabled = false;
-    });
+    .then(onSuccess)
+    .catch(function(e) { if (onError) onError(e.message || 'Erro'); });
 }
 
-function runDebug() {
-    var code = document.getElementById('debug-code').value.trim();
-    var error = document.getElementById('debug-error').value.trim();
-    if (!code) return;
-    callAgent('/api/javabot/debug', { code: code, error: error }, 'debug-result', 'debug-btn', '🐛 Analisando o erro...');
+function addMsg(containerId, text, cssClass) {
+    var box = document.getElementById(containerId);
+    if (!box) return;
+    var div = document.createElement('div');
+    div.className = 'msg ' + cssClass;
+    if (cssClass.includes('user')) {
+        div.textContent = text;
+    } else {
+        var safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                       .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+                       .replace(/\n/g,'<br>');
+        div.innerHTML = safe;
+    }
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
 }
 
-function runExplain() {
-    var code = document.getElementById('explain-code').value.trim();
-    if (!code) return;
-    callAgent('/api/javabot/explain', { code: code }, 'explain-result', 'explain-btn', '📖 Explicando o código linha por linha...');
+function addTyping(containerId) {
+    var box = document.getElementById(containerId);
+    if (!box) return null;
+    var id = 'typing-' + Date.now();
+    var div = document.createElement('div');
+    div.className = 'msg bot typing';
+    div.id = id;
+    div.innerHTML = '<span></span><span></span><span></span>';
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    return id;
 }
 
-function runChallenge() {
-    var topic = document.getElementById('challenge-topic').value;
-    var difficulty = document.getElementById('challenge-difficulty').value;
-    callAgent('/api/javabot/challenge', { topic: topic, difficulty: difficulty }, 'challenge-result', 'challenge-btn', '🎯 Gerando desafio personalizado...');
-}
-
-function runPseudocode() {
-    var pseudocode = document.getElementById('pseudocode-input').value.trim();
-    if (!pseudocode) return;
-    callAgent('/api/javabot/pseudocode', { pseudocode: pseudocode }, 'pseudocode-result', 'pseudocode-btn', '📝 Convertendo para Java...');
-}
-
-function runOptimize() {
-    var code = document.getElementById('optimize-code').value.trim();
-    if (!code) return;
-    callAgent('/api/javabot/optimize', { code: code }, 'optimize-result', 'optimize-btn', '⚡ Otimizando código...');
+function removeEl(id) {
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (el) el.remove();
 }
 </script>
 </body>

@@ -103,6 +103,31 @@ public class JavaBotController {
         return ResponseEntity.ok(Map.of("result", geminiService.optimizeCode(code)));
     }
 
+    @PostMapping("/fun-explain")
+    public ResponseEntity<Map<String, String>> funExplain(@RequestBody Map<String, String> body) {
+        String concept = body.getOrDefault("concept", "").trim();
+        if (concept.isBlank()) return ResponseEntity.ok(Map.of("result", "Qual conceito você quer aprender?"));
+        return ResponseEntity.ok(Map.of("result", geminiService.funExplain(concept)));
+    }
+
+    @PostMapping("/cafe-chat")
+    public ResponseEntity<Map<String, String>> cafeChat(@RequestBody Map<String, String> body) {
+        String message = body.getOrDefault("message", "").trim();
+        if (message.isBlank()) return ResponseEntity.ok(Map.of("response", "Oi! Me pergunta algo sobre Java!"));
+        return ResponseEntity.ok(Map.of("response", geminiService.javaCafeChat(message)));
+    }
+
+    @PostMapping("/quiz")
+    public ResponseEntity<Map<String, String>> generateQuiz(@RequestBody Map<String, String> body) {
+        String topic = body.getOrDefault("topic", "orientação a objetos");
+        return ResponseEntity.ok(Map.of("result", geminiService.generateQuiz(topic)));
+    }
+
+    @PostMapping("/facts")
+    public ResponseEntity<Map<String, String>> javaFacts(@RequestBody(required = false) Map<String, String> body) {
+        return ResponseEntity.ok(Map.of("result", geminiService.javaFacts()));
+    }
+
     private String buildLeveledPrompt(Exercise ex, int level) {
         String question = ex.getQuestionText();
         String answer = ex.getCorrectAnswer();

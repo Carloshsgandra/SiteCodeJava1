@@ -201,6 +201,50 @@ public class GeminiService {
         }
     }
 
+    public String funExplain(String concept) {
+        if (apiKey == null || apiKey.isBlank()) return getFallbackResponse("fun-explain");
+        String systemPrompt = "Você é o JavaCafé, um amigo descontraído que adora ensinar Java de forma divertida. "
+            + "Explique conceitos usando analogias do dia a dia, humor leve e exemplos absurdos mas memoráveis. "
+            + "Use linguagem informal, como se estivesse conversando no WhatsApp. "
+            + "Quando possível, use emojis para deixar mais animado. "
+            + "Faça o estudante sorrir enquanto aprende!";
+        String prompt = "Explique de forma descontraída e divertida o seguinte conceito de Java: " + concept + "\n\n"
+            + "Use: 1 analogia criativa, 1 exemplo de código simples, 1 fact curiosa sobre o conceito.";
+        return callWithSystemPrompt(prompt, systemPrompt, 1024);
+    }
+
+    public String javaCafeChat(String message) {
+        if (apiKey == null || apiKey.isBlank()) return getFallbackResponse("cafe-chat");
+        String systemPrompt = "Você é o JavaCafé, um professor informal de Java. "
+            + "Responda em português, de forma casual, amigável e bem-humorada. "
+            + "Use analogias criativas (compare código com coisas do cotidiano). "
+            + "Seja encorajador, use emojis com moderação e faça o aprendizado parecer uma conversa entre amigos. "
+            + "Se a pergunta não for sobre Java, traga ela de volta pro Java de forma engraçada.";
+        return callWithSystemPrompt(message, systemPrompt, 800);
+    }
+
+    public String generateQuiz(String topic) {
+        if (apiKey == null || apiKey.isBlank()) return getFallbackResponse("quiz");
+        String prompt = "Crie um quiz rápido e divertido com 5 perguntas de múltipla escolha sobre **" + topic + "** em Java.\n\n"
+            + "Formato para cada pergunta:\n"
+            + "🤔 **Pergunta X:** [texto da pergunta]\n"
+            + "A) [opção]\n"
+            + "B) [opção]\n"
+            + "C) [opção]\n"
+            + "D) [opção]\n"
+            + "✅ **Resposta:** [letra] — [breve explicação divertida]\n\n"
+            + "Use linguagem informal e adicione curiosidades nas explicações!";
+        return callWithSystemPrompt(prompt, "Você é um professor divertido de Java que cria quizzes engajantes. Use linguagem casual em português.", 1200);
+    }
+
+    public String javaFacts() {
+        if (apiKey == null || apiKey.isBlank()) return getFallbackResponse("facts");
+        String prompt = "Me dê 5 fatos curiosos e surpreendentes sobre Java (a linguagem de programação). "
+            + "Inclua: história, estatísticas malucas, curiosidades técnicas e fatos que fariam qualquer dev dizer 'nossa, não sabia!'. "
+            + "Use emojis, linguagem descontraída e faça parecer um thread viral do Twitter!";
+        return callWithSystemPrompt(prompt, "Você compartilha fatos fascinantes sobre Java de forma viral e divertida.", 800);
+    }
+
     public Map<String, String> simulateExecution(String code) {
         if (apiKey == null || apiKey.isBlank()) {
             return Map.of(

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — JavaDuolingo</title>
+    <title>Acesso — JavaDuolingo</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
 </head>
 <body>
@@ -15,37 +15,26 @@
             <p>Aprenda Java do jeito certo, do zero ao júnior!</p>
         </div>
 
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-error">Senha incorreta. Tente novamente.</div>
 
         <form th:action="@{/auth/login}" method="post">
+            <input type="hidden" name="username" value="admin">
             <div class="form-group">
-                <label class="form-label">Usuário</label>
-                <input type="text" name="username" class="form-input" placeholder="Seu usuário" required autofocus>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Senha</label>
-                <input type="password" name="password" class="form-input" placeholder="Sua senha" required>
+                <label class="form-label">Senha de acesso</label>
+                <input type="password" name="password" class="form-input"
+                       placeholder="Digite a senha" required autofocus autocomplete="current-password">
             </div>
             <div class="form-group" style="display:flex;align-items:center;gap:8px;margin-top:4px;">
                 <input type="checkbox" name="remember-me" id="remember-me"
                        style="width:18px;height:18px;accent-color:#58CC02;cursor:pointer;">
                 <label for="remember-me" style="font-size:14px;color:#555;cursor:pointer;margin:0;">
-                    Lembrar de mim por 30 dias
+                    Lembrar por 30 dias
                 </label>
             </div>
-            <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
+            <button type="submit" class="btn btn-primary btn-full" style="margin-top:12px;">
                 Entrar 🚀
             </button>
         </form>
-
-        <div class="auth-footer">
-            Não tem conta? <a href="/auth/register">Criar conta grátis</a>
-        </div>
-
-        <div style="margin-top:24px; padding:16px; background:#F7F7F7; border-radius:12px; font-size:13px; color:#666;">
-            Seu progresso (XP, streaks, conquistas) é salvo permanentemente. ✅
-        </div>
     </div>
 </div>
 </body>

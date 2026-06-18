@@ -9,15 +9,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class GeminiService {
 
     private final RestClient geminiRestClient;
+
+    @Autowired
+    public GeminiService(RestClient geminiRestClient) {
+        this.geminiRestClient = geminiRestClient;
+    }
 
     @Value("${groq.api.key:}")
     private String apiKey;
@@ -64,7 +66,7 @@ public class GeminiService {
 
             return extractText(response);
         } catch (Exception e) {
-            log.warn("Gemini API call failed: {}", e.getMessage());
+            System.err.println("[GeminiService] API call failed: " + e.getMessage());
             return getFallbackResponse(question);
         }
     }
@@ -196,7 +198,7 @@ public class GeminiService {
 
             return extractText(response);
         } catch (Exception e) {
-            log.warn("AI agent call failed: {}", e.getMessage());
+            System.err.println("[GeminiService] AI agent call failed: " + e.getMessage());
             return getFallbackResponse(userPrompt.substring(0, Math.min(40, userPrompt.length())));
         }
     }
@@ -225,15 +227,18 @@ public class GeminiService {
 
     public String generateQuiz(String topic) {
         if (apiKey == null || apiKey.isBlank()) return getFallbackResponse("quiz");
-        String prompt = "Crie um quiz rápido e divertido com 5 perguntas de múltipla escolha sobre **" + topic + "** em Java.\n\n"
-            + "Formato para cada pergunta:\n"
-            + "🤔 **Pergunta X:** [texto da pergunta]\n"
+        String prompt = "Crie um quiz com EXATAMENTE 5 perguntas de múltipla escolha sobre " + topic + " em Java.\n\n"
+            + "Use EXATAMENTE este formato, sem variações:\n"
+            + "PERGUNTA 1: [texto]\n"
             + "A) [opção]\n"
             + "B) [opção]\n"
             + "C) [opção]\n"
             + "D) [opção]\n"
-            + "✅ **Resposta:** [letra] — [breve explicação divertida]\n\n"
-            + "Use linguagem informal e adicione curiosidades nas explicações!";
+            + "RESPOSTA: [A ou B ou C ou D]\n"
+            + "EXPLICACAO: [explicação curta e divertida]\n\n"
+            + "PERGUNTA 2: [texto]\n"
+            + "...e assim por diante até PERGUNTA 5.\n\n"
+            + "Importante: use exatamente as palavras PERGUNTA, RESPOSTA e EXPLICACAO em maiúsculas. Linguagem informal.";
         return callWithSystemPrompt(prompt, "Você é um professor divertido de Java que cria quizzes engajantes. Use linguagem casual em português.", 1200);
     }
 
@@ -281,7 +286,7 @@ public class GeminiService {
             boolean isError = output.startsWith("ERRO");
             return Map.of("output", output, "type", isError ? "error" : "success", "source", "ai");
         } catch (Exception e) {
-            log.warn("AI simulation failed: {}", e.getMessage());
+            System.err.println("[GeminiService] AI simulation failed: " + e.getMessage());
             return Map.of(
                 "output", "Serviço de execução indisponível. Tente novamente mais tarde.",
                 "type", "error"

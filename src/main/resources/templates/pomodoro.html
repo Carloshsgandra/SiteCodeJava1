@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <style>
+        body { background: var(--gray-100); }
+        .pomo-layout { max-width: 700px; margin: 0 auto; padding: 24px 16px 80px; }
+        .pomo-header { text-align: center; margin-bottom: 28px; }
+        .pomo-header h1 { font-size: 22px; font-weight: 800; }
+        .pomo-header p { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+
+        /* Main timer card */
+        .timer-card { background: white; border-radius: 24px; border: 2px solid var(--gray-200); padding: 36px 28px 28px; text-align: center; margin-bottom: 20px; position: relative; transition: border-color 0.3s; }
+        .timer-card.work-mode  { border-color: var(--green); }
+        .timer-card.break-mode { border-color: var(--blue); }
+        .timer-card.long-break { border-color: var(--purple); }
+
+        /* Session type tabs */
+        .session-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
+        .session-tab { padding: 6px 16px; border-radius: 20px; border: 2px solid var(--gray-200); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; background: none; }
+        .session-tab.active-work  { background: var(--green);   color: white; border-color: var(--green); }
+        .session-tab.active-break { background: var(--blue);    color: white; border-color: var(--blue); }
+        .session-tab.active-long  { background: var(--purple);  color: white; border-color: var(--purple); }
+
+        /* Cycle dots */
+        .cycle-dots { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+        .cycle-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--gray-200); transition: background 0.3s, transform 0.3s; font-size: 14px; line-height: 18px; text-align: center; }
+        .cycle-dot.done { background: var(--green); transform: scale(1.15); }
+        .cycle-dot.active { background: var(--orange); animation: pulse-dot 1s infinite; }
+        @keyframes pulse-dot { 0%,100%{transform:scale(1);} 50%{transform:scale(1.25);} }
+
+        /* SVG Ring */
+        .ring-wrap { position: relative; display: inline-block; margin-bottom: 20px; }
+        .ring-wrap svg { transform: rotate(-90deg); }
+        .ring-bg { fill: none; stroke: var(--gray-200); stroke-width: 8; }
+        .ring-fill { fill: none; stroke: var(--green); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+        .ring-fill.break { stroke: var(--blue); }
+        .ring-fill.long  { stroke: var(--purple); }
+        .ring-time { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+        .ring-mins { font-size: 44px; font-weight: 900; letter-spacing: -2px; line-height: 1; }
+        .ring-label { font-size: 13px; font-weight: 700; color: var(--gray-400); margin-top: 4px; }
+
+        /* Controls */
+        .timer-controls { display: flex; gap: 12px; justify-content: center; align-items: center; }
+        .btn-pomo { width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: transform 0.15s, box-shadow 0.15s; }
+        .btn-pomo:hover { transform: scale(1.1); }
+        .btn-play { width: 72px; height: 72px; background: var(--green); color: white; box-shadow: 0 4px 0 var(--green-dark); }
+        .btn-play.break { background: var(--blue); box-shadow: 0 4px 0 #1490c8; }
+        .btn-play.long  { background: var(--purple); box-shadow: 0 4px 0 #9a5cc7; }
+        .btn-reset { background: var(--gray-200); color: var(--gray-700); }
+        .btn-skip  { background: #FFF0D0; color: var(--orange); }
+
+        /* Task input */
+        .task-input-wrap { margin-top: 20px; }
+        .task-input-wrap input { width: 100%; padding: 10px 16px; border: 2px solid var(--gray-200); border-radius: 12px; font-size: 14px; text-align: center; transition: border-color 0.15s; background: none; }
+        .task-input-wrap input:focus { outline: none; border-color: var(--green); }
+        .task-input-wrap label { font-size: 12px; color: var(--gray-400); margin-bottom: 6px; display: block; font-weight: 600; }
+
+        /* Today log */
+        .log-card { background: white; border-radius: 16px; border: 2px solid var(--gray-200); padding: 20px; margin-bottom: 16px; }
+        .log-card h3 { font-size: 15px; font-weight: 800; margin-bottom: 14px; }
+        .log-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-200); }
+        .log-row:last-child { border-bottom: none; }
+        .log-task { font-size: 14px; font-weight: 600; }
+        .log-pomos { display: flex; gap: 4px; }
+        .log-pomo-icon { font-size: 16px; }
+        .empty-log { text-align: center; padding: 20px; color: var(--gray-400); font-size: 14px; }
+
+        /* Settings modal */
+        .settings-btn { position: absolute; top: 14px; right: 16px; background: none; border: none; cursor: pointer; font-size: 20px; opacity: 0.5; transition: opacity 0.15s; }
+        .settings-btn:hover { opacity: 1; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 28px; }
+        .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+        .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--gray-200); }
+        .setting-row:last-of-type { border-bottom: none; }
+        .setting-label { font-size: 14px; font-weight: 600; }
+        .setting-label small { display: block; font-size: 12px; color: var(--gray-400); font-weight: 400; }
+        .setting-row input[type=number] { width: 64px; padding: 6px 10px; border: 2px solid var(--gray-200); border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; }
+        .setting-row input[type=number]:focus { outline: none; border-color: var(--green); }
+        .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+        .toggle { width: 44px; height: 24px; background: var(--gray-200); border-radius: 12px; cursor: pointer; position: relative; transition: background 0.2s; border: none; }
+        .toggle.on { background: var(--green); }
+        .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .toggle.on::after { left: 23px; }
+        .modal-actions { margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end; }
+
+        /* Tip banner */
+        .tip-banner { background: linear-gradient(135deg,#f0fff4,#d7ffb8); border: 2px solid var(--green-light); border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+        .tip-banner .tip-icon { font-size: 20px; flex-shrink: 0; }
+
+        /* Dark mode */
+        body.dark-mode .timer-card,
+        body.dark-mode .log-card,
+        body.dark-mode .modal { background: #2d2d2d; border-color: #3a3a3a; }
+        body.dark-mode .btn-reset { background: #3a3a3a; color: #ccc; }
+        body.dark-mode .ring-bg { stroke: #3a3a3a; }
+        body.dark-mode .task-input-wrap input { color: white; border-color: #3a3a3a; }
+        body.dark-mode .log-row { border-bottom-color: #3a3a3a; }
+        body.dark-mode .setting-row { border-bottom-color: #3a3a3a; }
+        body.dark-mode .setting-row input[type=number] { background: #1a1a1a; border-color: #3a3a3a; color: white; }
+        body.dark-mode .tip-banner { background: #1a3a1a; border-color: #2a6a2a; color: #9ddb9d; }
+
+        @media (max-width: 480px) {
+            .ring-mins { font-size: 36px; }
+            .btn-play { width: 60px; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+    <div class="pomo-layout">
+        <div class="pomo-header">
+            <h1>🍅 Pomodoro</h1>
+            <p>Foque em blocos de 25 minutos — a técnica que funciona de verdade</p>
+        </div>
+
+        <!-- Timer Card -->
+        <div class="timer-card work-mode" id="timer-card">
+            <button class="settings-btn" onclick="openSettings()" title="Configurações">⚙️</button>
+
+            <!-- Session tabs -->
+            <div class="session-tabs">
+                <button class="session-tab active-work" id="tab-work"  onclick="switchMode('work')">Foco</button>
+                <button class="session-tab" id="tab-break" onclick="switchMode('break')">Pausa Curta</button>
+                <button class="session-tab" id="tab-long"  onclick="switchMode('long')">Pausa Longa</button>
+            </div>
+
+            <!-- Cycle dots -->
+            <div class="cycle-dots" id="cycle-dots"></div>
+
+            <!-- SVG Ring -->
+            <div class="ring-wrap">
+                <svg id="ring-svg" width="200" height="200" viewBox="0 0 200 200">
+                    <circle class="ring-bg"   cx="100" cy="100" r="84"/>
+                    <circle class="ring-fill" cx="100" cy="100" r="84"
+                            id="ring-fill"
+                            stroke-dasharray="527.79"
+                            stroke-dashoffset="0"/>
+                </svg>
+                <div class="ring-time">
+                    <div class="ring-mins" id="ring-time">25:00</div>
+                    <div class="ring-label" id="ring-label">Foco</div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="timer-controls">
+                <button class="btn-pomo btn-reset" id="btn-reset" onclick="resetTimer()" title="Reiniciar (R)">↺</button>
+                <button class="btn-pomo btn-play" id="btn-play" onclick="toggleTimer()" title="Play/Pause (Espaço)">▶</button>
+                <button class="btn-pomo btn-skip"  id="btn-skip"  onclick="skipSession()" title="Pular sessão">⏭</button>
+            </div>
+
+            <!-- Task input -->
+            <div class="task-input-wrap">
+                <label>Em que você está trabalhando?</label>
+                <input type="text" id="task-input" placeholder="ex: Estudar Arrays em Java..." maxlength="80">
+            </div>
+        </div>
+
+        <!-- Tip -->
+        <div class="tip-banner">
+            <span class="tip-icon">💡</span>
+            <span><strong>Dica:</strong> Após 4 pomodoros, faça uma pausa longa de 15 minutos. Use <strong>Espaço</strong> para play/pause e <strong>R</strong> para reiniciar.</span>
+        </div>
+
+        <!-- Today's log -->
+        <div class="log-card">
+            <h3>📊 Sessões de Hoje</h3>
+            <div id="today-log">
+                <div class="empty-log">Nenhuma sessão concluída ainda.<br>Complete seu primeiro pomodoro! 🍅</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <h2>⚙️ Configurações</h2>
+            <div class="setting-row">
+                <div class="setting-label">Foco<small>minutos</small></div>
+                <input type="number" id="cfg-work" min="1" max="90" value="25">
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Pausa curta<small>minutos</small></div>
+                <input type="number" id="cfg-break" min="1" max="30" value="5">
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Pausa longa<small>minutos</small></div>
+                <input type="number" id="cfg-long" min="5" max="60" value="15">
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Ciclos até pausa longa<small>sessões de foco</small></div>
+                <input type="number" id="cfg-cycle" min="2" max="8" value="4">
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Iniciar próxima sessão automaticamente</div>
+                <button class="toggle" id="toggle-auto" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="setting-row">
+                <div class="setting-label">Sons</div>
+                <button class="toggle on" id="toggle-sound" onclick="this.classList.toggle('on')"></button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeSettings()">Cancelar</button>
+                <button class="btn btn-primary" onclick="applySettings()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+        // ===== Config =====
+        var cfg = loadConfig();
+        var CIRC = 527.79; // 2 * π * 84
+
+        // ===== State =====
+        var mode = 'work'; // 'work' | 'break' | 'long'
+        var totalSecs = cfg.work * 60;
+        var remaining = totalSecs;
+        var isRunning = false;
+        var intervalId = null;
+        var cycleCount = 0;    // completed work sessions this cycle
+        var todaySessions = loadTodayLog();
+
+        // ===== Init =====
+        renderCycleDots();
+        renderLog();
+        updateDisplay();
+
+        function loadConfig() {
+            var saved = localStorage.getItem('pomo-cfg');
+            var defaults = { work:25, breakMin:5, longBreak:15, cycle:4, autoStart:false, sound:true };
+            if (!saved) return defaults;
+            try { return Object.assign(defaults, JSON.parse(saved)); } catch(e) { return defaults; }
+        }
+        function saveConfig() {
+            localStorage.setItem('pomo-cfg', JSON.stringify(cfg));
+        }
+
+        function loadTodayLog() {
+            var key = 'pomo-log-' + todayKey();
+            try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+        }
+        function saveTodayLog() {
+            localStorage.setItem('pomo-log-' + todayKey(), JSON.stringify(todaySessions));
+        }
+        function todayKey() {
+            var d = new Date();
+            return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+        }
+
+        // ===== Timer logic =====
+        function toggleTimer() {
+            if (isRunning) pause(); else play();
+        }
+        function play() {
+            isRunning = true;
+            document.getElementById('btn-play').textContent = '⏸';
+            intervalId = setInterval(tick, 1000);
+        }
+        function pause() {
+            isRunning = false;
+            document.getElementById('btn-play').textContent = '▶';
+            clearInterval(intervalId);
+        }
+        function resetTimer() {
+            pause();
+            remaining = totalSecs;
+            updateDisplay();
+        }
+        function skipSession() {
+            pause();
+            onSessionEnd(false);
+        }
+
+        function tick() {
+            remaining--;
+            updateDisplay();
+            if (remaining <= 0) {
+                clearInterval(intervalId);
+                isRunning = false;
+                onSessionEnd(true);
+            }
+        }
+
+        function onSessionEnd(completed) {
+            if (completed) playDing();
+
+            if (mode === 'work') {
+                cycleCount++;
+                if (completed) {
+                    var task = document.getElementById('task-input').value.trim() || 'Sessão de estudo';
+                    addToLog(task);
+                }
+                renderCycleDots();
+                if (cycleCount >= cfg.cycle) {
+                    cycleCount = 0;
+                    renderCycleDots();
+                    switchMode('long');
+                    showToast('🏆 ' + cfg.cycle + ' pomodoros! Mereça sua pausa longa!', 'success');
+                } else {
+                    switchMode('break');
+                    showToast('☕ Pausa de ' + cfg.breakMin + ' min! Descanse os olhos.', 'info');
+                }
+            } else {
+                switchMode('work');
+                showToast('⚡ Hora de focar! Novo pomodoro começando.', 'info');
+            }
+
+            if (cfg.autoStart) setTimeout(play, 1500);
+            else document.getElementById('btn-play').textContent = '▶';
+        }
+
+        function switchMode(newMode, manual) {
+            pause();
+            mode = newMode;
+            if (newMode === 'work')  { totalSecs = cfg.work * 60; }
+            if (newMode === 'break') { totalSecs = cfg.breakMin * 60; }
+            if (newMode === 'long')  { totalSecs = cfg.longBreak * 60; }
+            remaining = totalSecs;
+
+            var card = document.getElementById('timer-card');
+            var ring = document.getElementById('ring-fill');
+            var play = document.getElementById('btn-play');
+            card.className = 'timer-card ' + (newMode === 'work' ? 'work-mode' : newMode === 'break' ? 'break-mode' : 'long-break');
+            ring.className = 'ring-fill ' + (newMode === 'work' ? '' : newMode === 'break' ? 'break' : 'long');
+            play.className  = 'btn-pomo btn-play ' + (newMode === 'work' ? '' : newMode === 'break' ? 'break' : 'long');
+
+            document.querySelectorAll('.session-tab').forEach(function(t) { t.className = 'session-tab'; });
+            document.getElementById('tab-work').className  = 'session-tab' + (newMode==='work'  ? ' active-work'  : '');
+            document.getElementById('tab-break').className = 'session-tab' + (newMode==='break' ? ' active-break' : '');
+            document.getElementById('tab-long').className  = 'session-tab' + (newMode==='long'  ? ' active-long'  : '');
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            var m = String(Math.floor(remaining / 60)).padStart(2,'0');
+            var s = String(remaining % 60).padStart(2,'0');
+            document.getElementById('ring-time').textContent = m + ':' + s;
+            var labels = { work:'Foco', break:'Pausa', long:'Pausa Longa' };
+            document.getElementById('ring-label').textContent = labels[mode];
+            var pct = remaining / totalSecs;
+            document.getElementById('ring-fill').style.strokeDashoffset = CIRC * (1 - pct);
+
+            // Page title
+            document.title = m + ':' + s + ' — ' + labels[mode] + ' 🍅';
+        }
+
+        function renderCycleDots() {
+            var dots = document.getElementById('cycle-dots');
+            dots.innerHTML = '';
+            for (var i = 0; i < cfg.cycle; i++) {
+                var dot = document.createElement('div');
+                if (i < cycleCount) { dot.className = 'cycle-dot done'; dot.textContent = '🍅'; }
+                else if (i === cycleCount && mode === 'work') { dot.className = 'cycle-dot active'; dot.textContent = '🍅'; }
+                else { dot.className = 'cycle-dot'; dot.textContent = '○'; }
+                dots.appendChild(dot);
+            }
+        }
+
+        // ===== Log =====
+        function addToLog(task) {
+            var existing = todaySessions.find(function(s) { return s.task === task; });
+            if (existing) { existing.count++; }
+            else { todaySessions.push({ task: task, count: 1 }); }
+            saveTodayLog();
+            renderLog();
+        }
+
+        function renderLog() {
+            var container = document.getElementById('today-log');
+            if (todaySessions.length === 0) {
+                container.innerHTML = '<div class="empty-log">Nenhuma sessão concluída ainda.<br>Complete seu primeiro pomodoro! 🍅</div>';
+                return;
+            }
+            var total = todaySessions.reduce(function(a,s){ return a+s.count; }, 0);
+            var html = '';
+            todaySessions.forEach(function(s) {
+                html += '<div class="log-row"><span class="log-task">' + escStr(s.task) + '</span><div class="log-pomos">';
+                for (var i=0;i<s.count;i++) html += '<span class="log-pomo-icon">🍅</span>';
+                html += '</div></div>';
+            });
+            html += '<div style="text-align:center;margin-top:12px;font-size:13px;color:var(--gray-400);font-weight:700;">Total: ' + total + ' pomodoro' + (total>1?'s':'') + ' hoje 🎉</div>';
+            container.innerHTML = html;
+        }
+
+        function escStr(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // ===== Sound =====
+        function playDing() {
+            if (!cfg.sound) return;
+            try {
+                var ctx = new (window.AudioContext || window.webkitAudioContext)();
+                // Two-tone chime
+                [523, 659, 784].forEach(function(freq, i) {
+                    var osc = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    var t = ctx.currentTime + i * 0.15;
+                    gain.gain.setValueAtTime(0.3, t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+                    osc.start(t);
+                    osc.stop(t + 0.5);
+                });
+            } catch(e) { /* AudioContext not available */ }
+        }
+
+        // ===== Settings =====
+        function openSettings() {
+            document.getElementById('cfg-work').value  = cfg.work;
+            document.getElementById('cfg-break').value = cfg.breakMin;
+            document.getElementById('cfg-long').value  = cfg.longBreak;
+            document.getElementById('cfg-cycle').value = cfg.cycle;
+            document.getElementById('toggle-auto').className  = 'toggle' + (cfg.autoStart ? ' on' : '');
+            document.getElementById('toggle-sound').className = 'toggle' + (cfg.sound ? ' on' : '');
+            document.getElementById('settings-modal').classList.add('open');
+        }
+        function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+        function applySettings() {
+            cfg.work       = Math.max(1, Math.min(90, parseInt(document.getElementById('cfg-work').value)  || 25));
+            cfg.breakMin   = Math.max(1, Math.min(30, parseInt(document.getElementById('cfg-break').value) || 5));
+            cfg.longBreak  = Math.max(5, Math.min(60, parseInt(document.getElementById('cfg-long').value)  || 15));
+            cfg.cycle      = Math.max(2, Math.min(8,  parseInt(document.getElementById('cfg-cycle').value) || 4));
+            cfg.autoStart  = document.getElementById('toggle-auto').classList.contains('on');
+            cfg.sound      = document.getElementById('toggle-sound').classList.contains('on');
+            saveConfig();
+            cycleCount = 0;
+            switchMode('work');
+            renderCycleDots();
+            closeSettings();
+            showToast('Configurações salvas!', 'success');
+        }
+
+        document.getElementById('settings-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeSettings();
+        });
+
+        // ===== Keyboard =====
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.code === 'Space') { e.preventDefault(); toggleTimer(); }
+            if (e.key === 'r' || e.key === 'R') resetTimer();
+            if (e.key === 'Escape') closeSettings();
+        });
+    </script>
+</body>
+</html>

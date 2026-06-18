@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Snippets — JavaDuolingo</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <style>
+        .snippets-layout { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+        .snippets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .snippets-header h1 { font-size: 22px; font-weight: 800; }
+        .search-bar { display: flex; gap: 8px; flex: 1; max-width: 400px; }
+        .search-bar input { flex: 1; padding: 10px 14px; border: 2px solid var(--gray-200); border-radius: 12px; font-size: 14px; background: white; }
+        .search-bar input:focus { outline: none; border-color: var(--green); }
+        .tag-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tag-chip { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 2px solid var(--gray-200); cursor: pointer; background: white; transition: all 0.15s; }
+        .tag-chip:hover, .tag-chip.active { background: var(--green); color: white; border-color: var(--green); }
+        .snippets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+        .snippet-card { background: white; border-radius: 16px; border: 2px solid var(--gray-200); overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; }
+        .snippet-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.10); transform: translateY(-2px); }
+        .snippet-card-header { padding: 14px 16px 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+        .snippet-title { font-weight: 800; font-size: 15px; flex: 1; }
+        .snippet-lang { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #EEF9FF; color: var(--blue); white-space: nowrap; }
+        .snippet-desc { font-size: 12px; color: var(--gray-400); padding: 0 16px 8px; }
+        .snippet-code { background: #1a1a2e; margin: 0 12px 12px; border-radius: 10px; padding: 12px; overflow-x: auto; max-height: 140px; overflow-y: hidden; }
+        .snippet-code code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 12px; color: #e2e8f0; white-space: pre; }
+        .snippet-tags { padding: 0 16px 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+        .snippet-tag { font-size: 11px; padding: 2px 8px; background: #F0F0F0; border-radius: 10px; color: var(--gray-700); }
+        .snippet-actions { display: flex; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid var(--gray-200); }
+        .btn-copy { flex: 1; padding: 8px; border: none; border-radius: 8px; background: var(--green); color: white; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+        .btn-copy:hover { background: var(--green-dark); }
+        .btn-copy.copied { background: var(--blue); }
+        .btn-delete { padding: 8px 12px; border: 2px solid var(--red); border-radius: 8px; background: none; color: var(--red); font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.15s; }
+        .btn-delete:hover { background: var(--red); color: white; }
+        .empty-state { text-align: center; padding: 64px 24px; color: var(--gray-400); }
+        .empty-state .empty-icon { font-size: 56px; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 18px; color: var(--gray-700); margin-bottom: 8px; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center; padding: 16px; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 20px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 28px; }
+        .modal h2 { font-size: 20px; font-weight: 800; margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--gray-700); }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 2px solid var(--gray-200); border-radius: 10px; font-size: 14px; font-family: inherit; transition: border-color 0.15s; }
+        .form-group textarea { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px; resize: vertical; min-height: 180px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--green); }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        /* Dark mode */
+        body.dark-mode .snippet-card { background: #2d2d2d; border-color: #3a3a3a; }
+        body.dark-mode .snippet-tag { background: #3a3a3a; color: #ccc; }
+        body.dark-mode .snippet-actions { border-top-color: #3a3a3a; }
+        body.dark-mode .modal { background: #2d2d2d; }
+        body.dark-mode .form-group input, body.dark-mode .form-group select, body.dark-mode .form-group textarea { background: #1a1a1a; border-color: #3a3a3a; color: white; }
+        body.dark-mode .search-bar input { background: #2d2d2d; border-color: #3a3a3a; color: white; }
+        body.dark-mode .tag-chip { background: #2d2d2d; border-color: #3a3a3a; color: #ccc; }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/navbar :: navbar(${user})}"></div>
+
+    <div class="snippets-layout">
+        <div class="snippets-header">
+            <div>
+                <h1>📌 Meus Snippets</h1>
+                <p style="font-size:13px;color:var(--gray-400);margin-top:2px;">Guarde e reutilize seus melhores códigos</p>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Buscar snippets..." oninput="filterSnippets()">
+            </div>
+            <button class="btn btn-primary" onclick="openModal()">+ Novo Snippet</button>
+        </div>
+
+        <!-- Tag filters -->
+        <div class="tag-filters" id="tag-filters">
+            <button class="tag-chip active" onclick="filterByTag(this, '')">Todos</button>
+            <!-- populated by JS -->
+        </div>
+
+        <!-- Snippets grid -->
+        <div class="snippets-grid" id="snippets-grid">
+            <div th:if="${snippets.empty}" class="empty-state" style="grid-column:1/-1;">
+                <div class="empty-icon">📭</div>
+                <h3>Nenhum snippet ainda</h3>
+                <p>Clique em "Novo Snippet" para guardar seu primeiro código!</p>
+            </div>
+
+            <div th:each="s : ${snippets}" class="snippet-card"
+                 th:data-id="${s.id}"
+                 th:data-tags="${s.tags}"
+                 th:data-title="${s.title}">
+                <div class="snippet-card-header">
+                    <span class="snippet-title" th:text="${s.title}">Título</span>
+                    <span class="snippet-lang" th:text="${s.language}">Java</span>
+                </div>
+                <p class="snippet-desc" th:if="${s.description}" th:text="${s.description}"></p>
+                <div class="snippet-code">
+                    <code th:text="${s.code}">// código</code>
+                </div>
+                <div class="snippet-tags" th:if="${s.tags}">
+                    <th:block th:each="tag : ${#strings.arraySplit(s.tags, ',')}">
+                        <span class="snippet-tag" th:text="${#strings.trim(tag)}"></span>
+                    </th:block>
+                </div>
+                <div class="snippet-actions">
+                    <button class="btn-copy" th:onclick="'copySnippet(this, ' + ${s.id} + ')'">📋 Copiar</button>
+                    <button class="btn-delete" th:onclick="'deleteSnippet(' + ${s.id} + ', this)'">🗑</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Snippet Modal -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <h2>📌 Novo Snippet</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Título *</label>
+                    <input type="text" id="s-title" placeholder="ex: Iterar ArrayList" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label>Linguagem</label>
+                    <select id="s-lang">
+                        <option value="Java">Java</option>
+                        <option value="SQL">SQL</option>
+                        <option value="Bash">Bash</option>
+                        <option value="JSON">JSON</option>
+                        <option value="XML">XML</option>
+                        <option value="YAML">YAML</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tags (separadas por vírgula)</label>
+                <input type="text" id="s-tags" placeholder="ex: loops, collections, stream">
+            </div>
+            <div class="form-group">
+                <label>Descrição (opcional)</label>
+                <input type="text" id="s-desc" placeholder="Breve explicação do que faz" maxlength="500">
+            </div>
+            <div class="form-group">
+                <label>Código *</label>
+                <textarea id="s-code" placeholder="Cole ou escreva seu código aqui..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveSnippet()">Salvar Snippet</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script>
+        var activeTag = '';
+
+        function openModal() {
+            document.getElementById('add-modal').classList.add('open');
+            document.getElementById('s-title').focus();
+        }
+        function closeModal() {
+            document.getElementById('add-modal').classList.remove('open');
+        }
+        document.getElementById('add-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        function saveSnippet() {
+            var title = document.getElementById('s-title').value.trim();
+            var code  = document.getElementById('s-code').value.trim();
+            if (!title || !code) { showToast('Título e código são obrigatórios!', 'warning'); return; }
+            fetch('/api/snippets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: title,
+                    code: code,
+                    language: document.getElementById('s-lang').value,
+                    tags: document.getElementById('s-tags').value.trim(),
+                    description: document.getElementById('s-desc').value.trim()
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) { showToast('Snippet salvo!', 'success'); setTimeout(() => location.reload(), 500); }
+            })
+            .catch(() => showToast('Erro ao salvar!', 'error'));
+        }
+
+        function copySnippet(btn, id) {
+            var card = btn.closest('.snippet-card');
+            var code = card.querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = '✅ Copiado!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = '📋 Copiar'; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+
+        function deleteSnippet(id, btn) {
+            if (!confirm('Deletar este snippet?')) return;
+            fetch('/api/snippets/' + id, { method: 'DELETE' })
+            .then(r => r.json())
+            .then(() => {
+                var card = btn.closest('.snippet-card');
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                card.style.transition = 'all 0.3s';
+                setTimeout(() => { card.remove(); checkEmpty(); }, 300);
+                showToast('Snippet removido!', 'info');
+            });
+        }
+
+        function checkEmpty() {
+            var grid = document.getElementById('snippets-grid');
+            if (grid.querySelectorAll('.snippet-card').length === 0) {
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">📭</div><h3>Nenhum snippet</h3><p>Adicione seu primeiro snippet!</p></div>';
+            }
+        }
+
+        function filterSnippets() {
+            var q = document.getElementById('search-input').value.toLowerCase();
+            document.querySelectorAll('.snippet-card').forEach(function(card) {
+                var title = (card.dataset.title || '').toLowerCase();
+                var tags  = (card.dataset.tags || '').toLowerCase();
+                var show  = (!q || title.includes(q) || tags.includes(q));
+                var tagMatch = !activeTag || (card.dataset.tags || '').toLowerCase().includes(activeTag.toLowerCase());
+                card.style.display = (show && tagMatch) ? '' : 'none';
+            });
+        }
+
+        function filterByTag(chip, tag) {
+            activeTag = tag;
+            document.querySelectorAll('.tag-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            filterSnippets();
+        }
+
+        // Build tag filter chips from existing snippets
+        (function buildTagFilters() {
+            var seen = {};
+            document.querySelectorAll('.snippet-card').forEach(function(card) {
+                var tags = (card.dataset.tags || '').split(',');
+                tags.forEach(function(t) {
+                    t = t.trim();
+                    if (t && !seen[t]) { seen[t] = true; }
+                });
+            });
+            var container = document.getElementById('tag-filters');
+            Object.keys(seen).forEach(function(tag) {
+                var btn = document.createElement('button');
+                btn.className = 'tag-chip';
+                btn.textContent = tag;
+                btn.onclick = function() { filterByTag(this, tag); };
+                container.appendChild(btn);
+            });
+        })();
+
+        // Keyboard shortcut: Ctrl+N = new snippet
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openModal(); }
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

@@ -276,6 +276,53 @@
         .dark-mode .cafe-option-card h3 { color: #ddd; }
         .dark-mode .btn-gray { background: #2a2a2a; border-color: #444; color: #ccc; }
 
+        /* ===== QUIZ INTERATIVO ===== */
+        .quiz-questions { display: flex; flex-direction: column; gap: 16px; }
+        .quiz-q-card {
+            background: #fafafa; border-radius: 14px;
+            border: 2px solid #e5e7eb; padding: 16px;
+        }
+        .quiz-q-text { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 12px; line-height: 1.5; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 7px; }
+        .quiz-opt-btn {
+            padding: 10px 14px; border-radius: 10px;
+            border: 2px solid #e5e7eb; background: white;
+            font-size: 13px; font-weight: 500; cursor: pointer;
+            text-align: left; transition: all .15s; line-height: 1.4;
+        }
+        .quiz-opt-btn:hover:not(:disabled) { border-color: var(--cafe-orange); background: #fff8ee; }
+        .quiz-opt-btn:disabled { cursor: default; }
+        .quiz-opt-btn.q-correct { border-color: #58CC02; background: #EEF9E4; color: #2d6e00; }
+        .quiz-opt-btn.q-wrong   { border-color: #FF4B4B; background: #FFF0F0; color: #c02020; }
+        .quiz-opt-letter { font-weight: 800; margin-right: 6px; }
+        .quiz-ans-reveal {
+            margin-top: 10px; padding: 10px 12px;
+            background: #F0FFF0; border-radius: 10px;
+            font-size: 12px; color: #2d6e00; line-height: 1.5; display: none;
+        }
+        /* Histórico */
+        .chat-header-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .btn-clear-history {
+            padding: 4px 10px; border-radius: 8px; font-size: 11px;
+            font-weight: 700; border: 1.5px solid #e5e7eb; background: white;
+            color: #9ca3af; cursor: pointer; transition: all .15s;
+        }
+        .btn-clear-history:hover { border-color: #FF4B4B; color: #FF4B4B; }
+        .history-badge {
+            font-size: 10px; color: #9ca3af; font-style: italic;
+            padding: 4px 0 2px;
+        }
+        /* dark mode quiz */
+        .dark-mode .quiz-q-card { background: #2a2a2a; border-color: #444; }
+        .dark-mode .quiz-q-text { color: #ddd; }
+        .dark-mode .quiz-opt-btn { background: #333; border-color: #555; color: #ccc; }
+        .dark-mode .quiz-opt-btn:hover:not(:disabled) { border-color: var(--cafe-orange); background: #2d1e0e; }
+        .dark-mode .quiz-ans-reveal { background: #1a3a1a; color: #80d040; }
+        .dark-mode .btn-clear-history { background: #2a2a2a; border-color: #444; color: #666; }
+
         /* ===== MOBILE ===== */
         @media (max-width: 680px) {
             .agents-page { padding: 12px 12px 90px; }
@@ -349,6 +396,10 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="chat-header-row">
+                        <span class="history-badge" id="formal-history-badge"></span>
+                        <button class="btn-clear-history" onclick="clearHistory('formal')">Limpar histórico</button>
+                    </div>
                     <div class="chat-box" id="formal-chat-msgs">
                         <div class="msg bot">Olá! Sou o <strong>JavaBot</strong> 🤖☕ — pergunte qualquer coisa sobre Java!</div>
                     </div>
@@ -560,6 +611,10 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="chat-header-row">
+                        <span class="history-badge" id="cafe-history-badge"></span>
+                        <button class="btn-clear-history" onclick="clearHistory('cafe')">Limpar histórico</button>
+                    </div>
                     <div class="chat-box" id="cafe-chat-msgs">
                         <div class="msg bot cafe">
                             E aí! 👋 Sou o <strong>JavaCafé</strong> — seu professor caféoléctico de Java!<br><br>
@@ -810,8 +865,115 @@ document.getElementById('quiz-topics').addEventListener('click', function(e) {
     chip.classList.add('sel');
     selectedQuizTopic = chip.dataset.topic;
 });
+
+function parseQuiz(text) {
+    var questions = [];
+    // Formato esperado: 🤔 Pergunta N: ... / A) ... / B) ... / ✅ Resposta: X)
+    var blocks = text.split(/(?=🤔\s*Pergunta\s*\d+:)/i).filter(function(b) { return b.trim(); });
+    blocks.forEach(function(block) {
+        var qMatch = block.match(/🤔\s*Pergunta\s*\d+:\s*([\s\S]+?)(?=\nA\))/i);
+        if (!qMatch) return;
+        var qText = qMatch[1].trim();
+        var opts = [];
+        ['A','B','C','D'].forEach(function(l) {
+            var re = new RegExp(l + '\\)\\s*(.+?)(?=\\n[B-D]\\)|\\n✅|$)', 'is');
+            var m = block.match(re);
+            if (m) opts.push({ letter: l, text: m[1].trim() });
+        });
+        var ansMatch = block.match(/✅\s*Resposta:\s*([A-D])\)/i);
+        var expMatch = block.match(/✅\s*Resposta:[^\n]*\n([\s\S]+)/i);
+        if (opts.length >= 2) {
+            questions.push({
+                question: qText,
+                options: opts,
+                answer: ansMatch ? ansMatch[1].toUpperCase() : null,
+                explanation: expMatch ? expMatch[1].trim() : ''
+            });
+        }
+    });
+    return questions;
+}
+
+function renderQuiz(questions, containerId) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    if (!questions || questions.length === 0) return;
+    el.className = 'ai-result cafe';
+    el.innerHTML = '';
+    var wrap = document.createElement('div');
+    wrap.className = 'quiz-questions';
+    questions.forEach(function(q, qi) {
+        var card = document.createElement('div');
+        card.className = 'quiz-q-card';
+        var qtxt = document.createElement('div');
+        qtxt.className = 'quiz-q-text';
+        qtxt.textContent = (qi + 1) + '. ' + q.question;
+        card.appendChild(qtxt);
+        var optsDiv = document.createElement('div');
+        optsDiv.className = 'quiz-opts';
+        var answered = false;
+        var reveal = document.createElement('div');
+        reveal.className = 'quiz-ans-reveal';
+        q.options.forEach(function(opt) {
+            var btn = document.createElement('button');
+            btn.className = 'quiz-opt-btn';
+            btn.innerHTML = '<span class="quiz-opt-letter">' + opt.letter + ')</span>' +
+                escapeHtml(opt.text);
+            btn.addEventListener('click', function() {
+                if (answered) return;
+                answered = true;
+                optsDiv.querySelectorAll('.quiz-opt-btn').forEach(function(b) {
+                    b.disabled = true;
+                });
+                var isCorrect = q.answer && opt.letter === q.answer;
+                btn.classList.add(isCorrect ? 'q-correct' : 'q-wrong');
+                if (!isCorrect && q.answer) {
+                    optsDiv.querySelectorAll('.quiz-opt-btn').forEach(function(b) {
+                        var lSpan = b.querySelector('.quiz-opt-letter');
+                        if (lSpan && lSpan.textContent.replace(')','') === q.answer) {
+                            b.classList.add('q-correct');
+                        }
+                    });
+                }
+                if (q.explanation) {
+                    reveal.textContent = (isCorrect ? '✅ Correto! ' : '❌ Incorreto. ') + q.explanation;
+                    reveal.style.display = 'block';
+                }
+            });
+            optsDiv.appendChild(btn);
+        });
+        card.appendChild(optsDiv);
+        card.appendChild(reveal);
+        wrap.appendChild(card);
+    });
+    el.appendChild(wrap);
+}
+
 function runQuiz() {
-    callCafeAgent('/api/javabot/quiz', { topic: selectedQuizTopic }, 'quiz-result', 'quiz-btn', '🎮 Gerando quiz divertido...');
+    var el = document.getElementById('quiz-result');
+    var btn = document.getElementById('quiz-btn');
+    if (!el) return;
+    el.className = 'ai-result loading cafe';
+    el.textContent = '🎮 Gerando quiz divertido...';
+    if (btn) btn.disabled = true;
+    fetchAgent('/api/javabot/quiz', { topic: selectedQuizTopic }, function(data) {
+        if (btn) btn.disabled = false;
+        var rawText = data.result || data.response || '';
+        var questions = parseQuiz(rawText);
+        if (questions.length > 0) {
+            renderQuiz(questions, 'quiz-result');
+        } else {
+            el.className = 'ai-result cafe';
+            var safe = rawText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                              .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+            el.innerHTML = safe;
+        }
+        if (window.innerWidth <= 680) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, function(err) {
+        if (btn) btn.disabled = false;
+        el.className = 'ai-result err';
+        el.textContent = 'Erro ao conectar. O quiz vazou! (' + err + ')';
+    });
 }
 
 // ===== CAFÉ: Facts =====
@@ -888,6 +1050,81 @@ function removeEl(id) {
     var el = document.getElementById(id);
     if (el) el.remove();
 }
+
+// ===== ESCAPE HTML HELPER =====
+function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== HISTORICO DE CONVERSA (localStorage) =====
+var HISTORY_KEYS = { formal: 'jdl_formal_history', cafe: 'jdl_cafe_history' };
+var HISTORY_WELCOME = {
+    formal: '<div class="msg bot">Olá! Sou o <strong>JavaBot</strong> 🤖☕ — pergunte qualquer coisa sobre Java!</div>',
+    cafe: '<div class="msg bot cafe">E aí! 👋 Sou o <strong>JavaCafé</strong> — seu professor caféoléctico de Java!<br><br>Me pergunta qualquer coisa. Prometo explicar sem deixar você dormir! ☕😄</div>'
+};
+var CHAT_BOXES = { formal: 'formal-chat-msgs', cafe: 'cafe-chat-msgs' };
+
+function saveHistory(chat) {
+    try {
+        var box = document.getElementById(CHAT_BOXES[chat]);
+        if (!box) return;
+        var msgs = [];
+        box.querySelectorAll('.msg').forEach(function(m) {
+            if (m.classList.contains('typing')) return;
+            msgs.push({ cls: m.className, html: m.innerHTML });
+        });
+        localStorage.setItem(HISTORY_KEYS[chat], JSON.stringify(msgs));
+        updateHistoryBadge(chat, msgs.length);
+    } catch(e) {}
+}
+
+function loadHistory(chat) {
+    try {
+        var raw = localStorage.getItem(HISTORY_KEYS[chat]);
+        if (!raw) return false;
+        var msgs = JSON.parse(raw);
+        if (!msgs || msgs.length === 0) return false;
+        var box = document.getElementById(CHAT_BOXES[chat]);
+        if (!box) return false;
+        box.innerHTML = '';
+        msgs.forEach(function(m) {
+            var div = document.createElement('div');
+            div.className = m.cls;
+            div.innerHTML = m.html;
+            box.appendChild(div);
+        });
+        box.scrollTop = box.scrollHeight;
+        updateHistoryBadge(chat, msgs.length);
+        return true;
+    } catch(e) { return false; }
+}
+
+function clearHistory(chat) {
+    try { localStorage.removeItem(HISTORY_KEYS[chat]); } catch(e) {}
+    var box = document.getElementById(CHAT_BOXES[chat]);
+    if (box) box.innerHTML = HISTORY_WELCOME[chat];
+    updateHistoryBadge(chat, 0);
+}
+
+function updateHistoryBadge(chat, count) {
+    var badge = document.getElementById(chat + '-history-badge');
+    if (!badge) return;
+    badge.textContent = count > 1 ? count + ' mensagens salvas' : '';
+}
+
+// Patch addMsg para salvar historico automaticamente
+var _origAddMsg = addMsg;
+addMsg = function(containerId, text, cssClass) {
+    _origAddMsg(containerId, text, cssClass);
+    if (containerId === 'formal-chat-msgs') saveHistory('formal');
+    if (containerId === 'cafe-chat-msgs') saveHistory('cafe');
+};
+
+// Carrega historico ao inicializar
+(function() {
+    loadHistory('formal');
+    loadHistory('cafe');
+})();
 
 // ===== DEFAULT TEXTAREA VALUES (via JS para evitar parse Thymeleaf) =====
 (function() {

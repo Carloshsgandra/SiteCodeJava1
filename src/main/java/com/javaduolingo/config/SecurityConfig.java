@@ -49,7 +49,13 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutUrl("/auth/logout")
                 .logoutSuccessUrl("/auth/login?logout=true")
+                .deleteCookies("remember-me")
                 .permitAll()
+            )
+            .rememberMe(rm -> rm
+                .key("javaduolingo-secret-2026")
+                .tokenValiditySeconds(2592000)
+                .userDetailsService(userDetailsService)
             )
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**", "/h2-console/**")

@@ -227,18 +227,10 @@ public class GeminiService {
 
     public String generateQuiz(String topic) {
         if (apiKey == null || apiKey.isBlank()) return getFallbackResponse("quiz");
-        String prompt = "Crie um quiz com EXATAMENTE 5 perguntas de múltipla escolha sobre " + topic + " em Java.\n\n"
-            + "Use EXATAMENTE este formato, sem variações:\n"
-            + "PERGUNTA 1: [texto]\n"
-            + "A) [opção]\n"
-            + "B) [opção]\n"
-            + "C) [opção]\n"
-            + "D) [opção]\n"
-            + "RESPOSTA: [A ou B ou C ou D]\n"
-            + "EXPLICACAO: [explicação curta e divertida]\n\n"
-            + "PERGUNTA 2: [texto]\n"
-            + "...e assim por diante até PERGUNTA 5.\n\n"
-            + "Importante: use exatamente as palavras PERGUNTA, RESPOSTA e EXPLICACAO em maiúsculas. Linguagem informal.";
+        String prompt = "Crie um quiz com 5 perguntas de múltipla escolha sobre " + topic + " em Java.\n"
+            + "Responda SOMENTE com um array JSON válido, sem texto antes ou depois:\n"
+            + "[{\"pergunta\":\"texto\",\"A\":\"opcao A\",\"B\":\"opcao B\",\"C\":\"opcao C\",\"D\":\"opcao D\",\"resposta\":\"B\",\"explicacao\":\"explicacao curta e divertida\"}]\n"
+            + "Gere exatamente 5 objetos. Use linguagem casual em português.";
         return callWithSystemPrompt(prompt, "Você é um professor divertido de Java que cria quizzes engajantes. Use linguagem casual em português.", 1200);
     }
 

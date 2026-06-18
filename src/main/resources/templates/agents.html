@@ -867,38 +867,25 @@ document.getElementById('quiz-topics').addEventListener('click', function(e) {
 });
 
 function parseQuiz(text) {
-    var questions = [];
-    // Suporta formato: PERGUNTA N: / A) B) C) D) / RESPOSTA: X / EXPLICACAO: ...
-    var blocks = text.split(/(?=PERGUNTA\s*\d+\s*:)/i).filter(function(b) { return b.trim(); });
-    blocks.forEach(function(block) {
-        // Extrai texto da pergunta
-        var qMatch = block.match(/PERGUNTA\s*\d+\s*:\s*(.+?)(?=\nA\)|\nA -)|\s*A\))/is);
-        if (!qMatch) return;
-        var qText = qMatch[1].replace(/\*\*/g, '').trim();
-
-        // Extrai opções A B C D
-        var opts = [];
-        ['A','B','C','D'].forEach(function(l) {
-            var re = new RegExp(l + '[\\)\\-]\\s*([^\\n]+)', 'i');
-            var m = block.match(re);
-            if (m) opts.push({ letter: l, text: m[1].replace(/\*\*/g,'').trim() });
-        });
-
-        // Extrai resposta (letra sozinha após RESPOSTA:)
-        var ansMatch = block.match(/RESPOSTA\s*:\s*\**([A-D])\**/i);
-        // Extrai explicação
-        var expMatch = block.match(/EXPLICACAO\s*:\s*(.+?)(?=\nPERGUNTA|\s*$)/is);
-
-        if (opts.length >= 2) {
-            questions.push({
-                question: qText,
-                options: opts,
-                answer: ansMatch ? ansMatch[1].toUpperCase() : null,
-                explanation: expMatch ? expMatch[1].replace(/\*\*/g,'').trim() : ''
+    // Extrai JSON array do texto (ignora qualquer texto extra da IA)
+    var jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+    try {
+        var arr = JSON.parse(jsonMatch[0]);
+        if (!Array.isArray(arr)) return [];
+        return arr.map(function(q) {
+            var opts = [];
+            ['A','B','C','D'].forEach(function(l) {
+                if (q[l]) opts.push({ letter: l, text: String(q[l]) });
             });
-        }
-    });
-    return questions;
+            return {
+                question: String(q.pergunta || q.question || ''),
+                options: opts,
+                answer: String(q.resposta || q.answer || '').toUpperCase().charAt(0),
+                explanation: String(q.explicacao || q.explanation || '')
+            };
+        }).filter(function(q) { return q.question && q.options.length >= 2; });
+    } catch(e) { return []; }
 }
 
 function renderQuiz(questions, containerId) {

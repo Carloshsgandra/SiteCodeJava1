@@ -15,4 +15,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT 10")
     List<User> findTop10ByOrderByXpDesc();
+
+    @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT 20")
+    List<User> findTop20ByOrderByXpDesc();
+
+    long countByXpGreaterThan(int xp);
 }

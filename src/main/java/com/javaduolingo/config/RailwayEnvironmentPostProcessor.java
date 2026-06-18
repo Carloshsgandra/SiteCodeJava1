@@ -13,13 +13,14 @@ public class RailwayEnvironmentPostProcessor implements EnvironmentPostProcessor
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        if (environment.getProperty("SPRING_DATASOURCE_URL") != null) {
-            System.out.println("[DB-CONFIG] Usando SPRING_DATASOURCE_URL definido manualmente.");
+        // Se já foi configurado manualmente, não sobrescreve
+        if (env("SPRING_DATASOURCE_URL") != null) {
+            log("Usando SPRING_DATASOURCE_URL definido manualmente.");
             return;
         }
 
-        // Tenta DATABASE_URL primeiro (formato postgres://user:pass@host:port/db)
-        String rawUrl = environment.getProperty("DATABASE_URL");
+        // 1. Tenta DATABASE_URL (Railway: postgres://user:pass@host:port/db)
+        String rawUrl = env("DATABASE_URL");
         if (rawUrl != null && !rawUrl.isBlank()) {
             try {
                 String normalized = rawUrl.replaceFirst("^postgres://", "postgresql://");
@@ -28,42 +29,59 @@ public class RailwayEnvironmentPostProcessor implements EnvironmentPostProcessor
                 int port = uri.getPort() > 0 ? uri.getPort() : 5432;
                 String db = uri.getPath().replaceFirst("^/", "");
                 String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + "/" + db;
-                String[] userInfo = uri.getUserInfo() != null
-                        ? uri.getUserInfo().split(":", 2)
-                        : new String[]{"postgres", ""};
-                String username = userInfo[0];
-                String password = userInfo.length > 1 ? userInfo[1] : "";
-                applyPostgres(environment, jdbcUrl, username, password, "DATABASE_URL");
+                String[] info = uri.getUserInfo() != null ? uri.getUserInfo().split(":", 2) : new String[]{"postgres", ""};
+                apply(environment, jdbcUrl, info[0], info.length > 1 ? info[1] : "", "DATABASE_URL");
                 return;
             } catch (Exception e) {
-                System.out.println("[DB-CONFIG] Falha ao parsear DATABASE_URL: " + e.getMessage());
+                log("Falha ao parsear DATABASE_URL: " + e.getMessage());
             }
         }
 
-        // Fallback: variáveis individuais PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD
-        String pgHost = environment.getProperty("PGHOST");
+        // 2. Tenta PGHOST / PGPORT / PGDATABASE / PGUSER / PGPASSWORD
+        String pgHost = env("PGHOST");
         if (pgHost != null && !pgHost.isBlank()) {
-            String pgPort = environment.getProperty("PGPORT", "5432");
-            String pgDb   = environment.getProperty("PGDATABASE", "railway");
-            String pgUser = environment.getProperty("PGUSER", "postgres");
-            String pgPass = environment.getProperty("PGPASSWORD", "");
-            String jdbcUrl = "jdbc:postgresql://" + pgHost + ":" + pgPort + "/" + pgDb;
-            applyPostgres(environment, jdbcUrl, pgUser, pgPass, "PGHOST vars");
+            String jdbcUrl = "jdbc:postgresql://" + pgHost + ":" + env("PGPORT", "5432")
+                    + "/" + env("PGDATABASE", "railway");
+            apply(environment, jdbcUrl, env("PGUSER", "postgres"), env("PGPASSWORD", ""), "PGHOST vars");
             return;
         }
 
-        System.out.println("[DB-CONFIG] Nenhuma variável de banco PostgreSQL encontrada — usando fallback H2.");
+        // 3. Tenta RAILWAY_TCP_PROXY_DOMAIN (outro formato que Railway às vezes usa)
+        String tcpDomain = env("RAILWAY_TCP_PROXY_DOMAIN");
+        String tcpPort   = env("RAILWAY_TCP_PROXY_PORT");
+        if (tcpDomain != null && !tcpDomain.isBlank() && tcpPort != null) {
+            String jdbcUrl = "jdbc:postgresql://" + tcpDomain + ":" + tcpPort
+                    + "/" + env("PGDATABASE", "railway");
+            apply(environment, jdbcUrl, env("PGUSER", "postgres"), env("PGPASSWORD", ""), "RAILWAY_TCP_PROXY vars");
+            return;
+        }
+
+        log("Nenhuma variavel PostgreSQL encontrada — usando fallback H2. Defina DATABASE_URL ou PGHOST no Railway.");
     }
 
-    private void applyPostgres(ConfigurableEnvironment env, String jdbcUrl, String username, String password, String source) {
+    // Lê do SO diretamente — mais confiável que environment.getProperty() no boot early stage
+    private static String env(String key) {
+        String v = System.getenv(key);
+        return (v != null && !v.isBlank()) ? v : null;
+    }
+
+    private static String env(String key, String defaultVal) {
+        String v = env(key);
+        return v != null ? v : defaultVal;
+    }
+
+    private void apply(ConfigurableEnvironment environment, String jdbcUrl, String user, String pass, String source) {
         Map<String, Object> props = new HashMap<>();
         props.put("spring.datasource.url",               jdbcUrl);
-        props.put("spring.datasource.username",           username);
-        props.put("spring.datasource.password",           password);
+        props.put("spring.datasource.username",           user);
+        props.put("spring.datasource.password",           pass);
         props.put("spring.datasource.driver-class-name", "org.postgresql.Driver");
         props.put("spring.jpa.database-platform",        "org.hibernate.dialect.PostgreSQLDialect");
-        env.getPropertySources().addFirst(new MapPropertySource("railway-database-config", props));
-        System.out.println("[DB-CONFIG] PostgreSQL configurado via " + source + " -> " +
-                jdbcUrl.replaceAll(":[^@/]+@", ":***@"));
+        environment.getPropertySources().addFirst(new MapPropertySource("railway-db", props));
+        log("PostgreSQL configurado via " + source + " -> " + jdbcUrl.replaceAll(":[^@/]+@", ":***@"));
+    }
+
+    private static void log(String msg) {
+        System.out.println("[DB-CONFIG] " + msg);
     }
 }

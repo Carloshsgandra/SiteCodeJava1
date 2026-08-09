@@ -523,14 +523,21 @@ document.addEventListener('input', (event) => {
 
 document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 document.getElementById('search-trigger').addEventListener('click', openCommandPalette);
+function closeMobileMenu() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('menu-button').setAttribute('aria-expanded', 'false');
+}
+
 document.getElementById('menu-button').addEventListener('click', () => {
   const sidebar = document.getElementById('sidebar');
   sidebar.classList.toggle('open');
   document.getElementById('menu-button').setAttribute('aria-expanded', sidebar.classList.contains('open'));
 });
+document.getElementById('sidebar-close').addEventListener('click', closeMobileMenu);
+document.getElementById('sidebar-backdrop').addEventListener('click', closeMobileMenu);
 
 window.addEventListener('hashchange', () => {
-  document.getElementById('sidebar').classList.remove('open');
+  closeMobileMenu();
   render();
 });
 
@@ -542,7 +549,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     closeModal();
     document.getElementById('command-palette').hidden = true;
-    document.getElementById('sidebar').classList.remove('open');
+    closeMobileMenu();
   }
   if (exerciseSession && routeParts().parts[0] === 'study-session' && !exerciseSession.checked && /^[a-d]$/i.test(event.key)) {
     document.querySelectorAll('[data-answer]')[event.key.toLocaleLowerCase().charCodeAt(0) - 97]?.click();

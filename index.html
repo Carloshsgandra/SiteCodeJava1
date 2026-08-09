@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="JavaFlow — central de estudos adaptativa para aprender Java com prática ativa.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="JavaFlow — Hackeie seus estudos de Java">
+  <meta property="og:description" content="Trilha adaptativa, revisão espaçada, projetos, provas e foco profundo em uma central de estudos Java.">
+  <meta property="og:image" content="./assets/images/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="JavaFlow — Hackeie seus estudos de Java">
+  <meta name="twitter:description" content="Uma central adaptativa de estudos para dominar Java com prática ativa.">
+  <meta name="twitter:image" content="./assets/images/og.png">
+  <title>JavaFlow — Hackeie seus estudos de Java</title>
+  <link rel="stylesheet" href="./assets/css/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#view">Pular para o conteúdo</a>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+      <a class="brand" href="#/dashboard" aria-label="JavaFlow - início">
+        <span class="brand-mark">J</span>
+        <span><strong>JavaFlow</strong><small>study system</small></span>
+      </a>
+
+      <div class="sidebar-scroll">
+        <nav class="nav-group" aria-label="Estudar">
+          <span class="nav-label">Estudar</span>
+          <a href="#/dashboard" data-nav="dashboard"><span>⌂</span>Visão geral</a>
+          <a href="#/learn" data-nav="learn"><span>◫</span>Trilha Java</a>
+          <a href="#/daily" data-nav="daily"><span>✦</span>Missão diária</a>
+          <a href="#/review" data-nav="review"><span>↻</span>Revisar erros <b class="nav-count" id="review-count">0</b></a>
+          <a href="#/flashcards" data-nav="flashcards"><span>▤</span>Flashcards <b class="nav-count" id="due-count">0</b></a>
+        </nav>
+
+        <nav class="nav-group" aria-label="Praticar">
+          <span class="nav-label">Praticar</span>
+          <a href="#/exams" data-nav="exams"><span>✓</span>Provas</a>
+          <a href="#/projects" data-nav="projects"><span>⌘</span>Projetos guiados</a>
+          <a href="#/interview" data-nav="interview"><span>◎</span>Entrevistas</a>
+          <a href="#/playground" data-nav="playground"><span>&lt;/&gt;</span>Playground</a>
+          <a href="#/snippets" data-nav="snippets"><span>⌑</span>Snippets</a>
+        </nav>
+
+        <nav class="nav-group" aria-label="Planejar">
+          <span class="nav-label">Planejar</span>
+          <a href="#/focus" data-nav="focus"><span>◷</span>Foco</a>
+          <a href="#/calendar" data-nav="calendar"><span>▦</span>Calendário</a>
+          <a href="#/roadmap" data-nav="roadmap"><span>⌁</span>Roadmap</a>
+          <a href="#/ranking" data-nav="ranking"><span>♜</span>Ranking</a>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="profile-chip" data-route="profile" type="button">
+          <span class="avatar" id="sidebar-avatar">D</span>
+          <span><strong id="sidebar-name">Dev Java</strong><small id="sidebar-level">Nível 1</small></span>
+          <span aria-hidden="true">›</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="main-column">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">☰</button>
+        <button class="search-trigger" id="search-trigger" type="button">
+          <span>⌕</span><span>Buscar recurso ou lição...</span><kbd>Ctrl K</kbd>
+        </button>
+        <div class="top-stats" aria-label="Suas estatísticas">
+          <button class="stat-pill fire" data-route="profile" type="button" title="Sequência diária">🔥 <strong id="streak-value">0</strong></button>
+          <button class="stat-pill xp" data-route="profile" type="button" title="Experiência">⚡ <strong id="xp-value">0 XP</strong></button>
+          <button class="icon-button" id="theme-toggle" type="button" aria-label="Alternar tema">◐</button>
+          <button class="coach-button" data-route="coach" type="button"><span>✦</span><span>Coach IA</span></button>
+        </div>
+      </header>
+
+      <main id="view" tabindex="-1" aria-live="polite"></main>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navegação móvel">
+    <a href="#/dashboard" data-nav="dashboard"><span>⌂</span>Início</a>
+    <a href="#/learn" data-nav="learn"><span>◫</span>Aprender</a>
+    <a href="#/focus" data-nav="focus"><span>◷</span>Foco</a>
+    <a href="#/review" data-nav="review"><span>↻</span>Revisar</a>
+    <a href="#/profile" data-nav="profile"><span>●</span>Perfil</a>
+  </nav>
+
+  <div class="modal-backdrop" id="modal" hidden></div>
+  <div class="command-palette" id="command-palette" hidden></div>
+  <div class="toast-region" id="toast-region" aria-live="assertive"></div>
+
+  <script type="module" src="./assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "javaflow-study-system",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Plataforma adaptativa de estudos Java feita com HTML, CSS e JavaScript.",
+  "scripts": {
+    "data": "node scripts/convert-sql-to-js.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test": "node scripts/test.mjs",
+    "build": "node scripts/build.mjs"
+  }
+}

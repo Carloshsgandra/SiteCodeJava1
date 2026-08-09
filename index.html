@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#111827">
-  <meta name="description" content="JavaFlow — central de estudos adaptativa para aprender Java com prática ativa.">
+  <meta name="description" content="JavaFlow — central adaptativa para aprender Java e inglês do zero com prática ativa.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="JavaFlow — Hackeie seus estudos de Java">
-  <meta property="og:description" content="Trilha adaptativa, revisão espaçada, projetos, provas e foco profundo em uma central de estudos Java.">
+  <meta property="og:title" content="JavaFlow — Aprenda Java e inglês com prática ativa">
+  <meta property="og:description" content="Trilhas adaptativas, revisão espaçada, projetos Java e um curso de inglês do zero ao A1.">
   <meta property="og:image" content="./assets/images/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="JavaFlow — Hackeie seus estudos de Java">
-  <meta name="twitter:description" content="Uma central adaptativa de estudos para dominar Java com prática ativa.">
+  <meta name="twitter:title" content="JavaFlow — Aprenda Java e inglês com prática ativa">
+  <meta name="twitter:description" content="Uma central adaptativa para dominar Java e aprender inglês do zero ao A1.">
   <meta name="twitter:image" content="./assets/images/og.png">
-  <title>JavaFlow — Hackeie seus estudos de Java</title>
+  <title>JavaFlow — Aprenda Java e inglês com prática ativa</title>
   <link rel="stylesheet" href="./assets/css/app.css">
 </head>
 <body>
@@ -28,8 +28,21 @@
       <button class="icon-button sidebar-close" id="sidebar-close" type="button" aria-label="Fechar menu">×</button>
 
       <div class="sidebar-scroll">
+        <div class="course-switcher" aria-label="Escolher curso">
+          <a href="#/dashboard" data-course="java"><span>J</span>Java</a>
+          <a href="#/english" data-course="english"><span>EN</span>Inglês</a>
+        </div>
+
+        <nav class="nav-group english-nav" aria-label="Aprender inglês">
+          <span class="nav-label">Inglês do zero</span>
+          <a href="#/english" data-nav="english-dashboard"><span>🇺🇸</span>Visão geral</a>
+          <a href="#/english/learn" data-nav="english-learn"><span>◫</span>Trilha A0 → A1</a>
+          <a href="#/english/review" data-nav="english-review"><span>↻</span>Revisão adaptativa</a>
+          <a href="#/english/words" data-nav="english-words"><span>ABC</span>Vocabulário</a>
+        </nav>
+
         <nav class="nav-group" aria-label="Estudar">
-          <span class="nav-label">Estudar</span>
+          <span class="nav-label">Java · Estudar</span>
           <a href="#/dashboard" data-nav="dashboard"><span>⌂</span>Visão geral</a>
           <a href="#/learn" data-nav="learn"><span>◫</span>Trilha Java</a>
           <a href="#/daily" data-nav="daily"><span>✦</span>Missão diária</a>
@@ -85,8 +98,8 @@
 
   <nav class="bottom-nav" aria-label="Navegação móvel">
     <a href="#/dashboard" data-nav="dashboard"><span>⌂</span>Início</a>
-    <a href="#/learn" data-nav="learn"><span>◫</span>Aprender</a>
-    <a href="#/focus" data-nav="focus"><span>◷</span>Foco</a>
+    <a href="#/learn" data-nav="learn"><span>◫</span>Java</a>
+    <a href="#/english" data-nav="english-dashboard"><span>🇺🇸</span>Inglês</a>
     <a href="#/review" data-nav="review"><span>↻</span>Revisar</a>
     <a href="#/profile" data-nav="profile"><span>●</span>Perfil</a>
   </nav>

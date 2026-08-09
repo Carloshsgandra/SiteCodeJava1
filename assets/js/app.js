@@ -1,4 +1,5 @@
 import { curriculum } from './data.js';
+import { englishCurriculum, englishDashboardView, englishExerciseById, englishExerciseView, englishLearnView, englishLessonExercises, englishResultView, englishReviewView, englishStats, englishWordsView } from './english.js';
 import { askCoach, runJava } from './services.js';
 import { store } from './store.js';
 import { calendarView, coachView, dailyView, dashboardView, dataAccess, examIntroView, examResultView, examSessionView, examsView, exerciseView, flashcardSessionView, flashcardsView, focusView, interviewView, learnView, playgroundView, profileView, projectView, projectsView, rankingView, reviewView, roadmapView, sessionResultView, snippetsView, stats } from './views.js';
@@ -6,6 +7,7 @@ import { closeModal, copyText, dayKey, downloadFile, escapeHtml, go, normalizeAn
 
 const view = document.getElementById('view');
 let exerciseSession = null;
+let englishSession = null;
 let flashcardSession = null;
 let examSession = null;
 let examTicker = null;
@@ -23,7 +25,11 @@ function render() {
   const route = routeParts();
   const [root, id] = route.parts;
 
-  if (exerciseSession?.finished && root === 'session-result') {
+  if (root === 'english' && route.parts[1] === 'session' && englishSession) {
+    view.innerHTML = englishExerciseView(englishSession);
+  } else if (root === 'english' && route.parts[1] === 'result' && englishSession?.finished) {
+    view.innerHTML = englishResultView(englishSession);
+  } else if (exerciseSession?.finished && root === 'session-result') {
     view.innerHTML = sessionResultView(exerciseSession);
   } else if (flashcardSession && root === 'flashcard-session') {
     view.innerHTML = flashcardSessionView(flashcardSession);
@@ -65,6 +71,7 @@ function render() {
       case 'agents':
       case 'chat': view.innerHTML = coachView(chat); requestAnimationFrame(scrollMessages); break;
       case 'lesson': startLesson(Number(id)); return;
+      case 'english': renderEnglishRoute(route.parts); break;
       default: view.innerHTML = notFoundView();
     }
   }
@@ -72,6 +79,104 @@ function render() {
   updateChrome(root);
   wireViewForms();
   window.scrollTo({ top: 0, behavior: store.state.settings.reducedMotion ? 'auto' : 'smooth' });
+}
+
+function renderEnglishRoute(parts) {
+  const page = parts[1] ?? 'dashboard';
+  if (page === 'dashboard') view.innerHTML = englishDashboardView();
+  else if (page === 'learn') view.innerHTML = englishLearnView();
+  else if (page === 'review') view.innerHTML = englishReviewView();
+  else if (page === 'words') view.innerHTML = englishWordsView();
+  else if (page === 'lesson') {
+    startEnglishLesson(Number(parts[2]));
+    return;
+  } else view.innerHTML = notFoundView();
+}
+
+function startEnglishLesson(id) {
+  const lesson = englishCurriculum.lessons.find((item) => item.id === id);
+  if (!lesson) return go('english');
+  englishSession = { mode: 'lesson', lessonId: id, exercises: englishLessonExercises(id), index: 0, correctCount: 0, checked: false, correct: false, answer: '', hint: '', exitRoute: 'learn', finished: false, xpEarned: 0 };
+  go('english/session');
+}
+
+function startEnglishSet(exercises, mode, exitRoute) {
+  if (!exercises.length) return toast('Complete uma lição para liberar esta prática.', 'error');
+  englishSession = { mode, lessonId: null, exercises, index: 0, correctCount: 0, checked: false, correct: false, answer: '', hint: '', exitRoute, finished: false, xpEarned: 0 };
+  go('english/session');
+}
+
+function englishAnswer() {
+  return document.getElementById('english-answer')?.value ?? englishSession?.answer ?? '';
+}
+
+function normalizeEnglish(value) {
+  return normalizeAnswer(value).replace(/[?.!,;:'“”]/g, '');
+}
+
+function checkEnglishExercise() {
+  if (!englishSession || englishSession.checked) return;
+  const exercise = englishSession.exercises[englishSession.index];
+  const answer = englishAnswer();
+  if (!answer.trim()) return toast('Escolha, monte ou fale uma resposta antes de verificar.', 'error');
+  const correct = normalizeEnglish(answer) === normalizeEnglish(exercise.correct_answer);
+  Object.assign(englishSession, { answer, correct, checked: true });
+  if (correct) {
+    englishSession.correctCount += 1;
+    englishSession.xpEarned += exercise.xp_reward ?? 8;
+  }
+  store.recordEnglishAnswer(exercise.id, correct, answer, exercise.lesson_id, correct ? exercise.xp_reward : 0);
+  render();
+}
+
+function nextEnglishExercise() {
+  if (!englishSession?.checked) return;
+  const exercise = englishSession.exercises[englishSession.index];
+  if (englishSession.mode === 'review') store.rateEnglishCard(exercise.id, englishSession.correct ? 'good' : 'again');
+  if (englishSession.index + 1 >= englishSession.exercises.length) return finishEnglishSession();
+  englishSession.index += 1;
+  Object.assign(englishSession, { checked: false, correct: false, answer: '', hint: '' });
+  render();
+}
+
+function finishEnglishSession() {
+  const score = percent(englishSession.correctCount, englishSession.exercises.length);
+  if (englishSession.mode === 'lesson') {
+    const lesson = englishCurriculum.lessons.find((item) => item.id === englishSession.lessonId);
+    if (store.completeEnglishLesson(lesson.id, score, lesson.xp_reward)) englishSession.xpEarned += lesson.xp_reward;
+  }
+  if (englishSession.mode === 'daily') store.update((state) => { state.english.daily[dayKey()] = { completed: true, score, at: new Date().toISOString() }; });
+  englishSession.finished = true;
+  go('english/result');
+}
+
+function speakEnglish(text) {
+  if (!('speechSynthesis' in window)) return toast('O áudio não está disponível neste navegador.', 'error');
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.82;
+  const voice = speechSynthesis.getVoices().find((item) => item.lang.toLowerCase().startsWith('en'));
+  if (voice) utterance.voice = voice;
+  speechSynthesis.speak(utterance);
+}
+
+function recognizeEnglish() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) return toast('Reconhecimento de voz não disponível. Você ainda pode digitar a resposta.', 'error');
+  const recognition = new Recognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.onstart = () => toast('Ouvindo… fale em inglês.');
+  recognition.onerror = () => toast('Não consegui ouvir. Tente novamente em um lugar silencioso.', 'error');
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    englishSession.answer = transcript;
+    const input = document.getElementById('english-answer');
+    if (input) input.value = transcript;
+    toast(`Entendi: “${transcript}”`);
+  };
+  recognition.start();
 }
 
 function notFoundView() {
@@ -362,8 +467,11 @@ function importBackup() {
 function updateChrome(root = routeParts().parts[0]) {
   const computed = stats();
   const user = store.state.user;
-  document.getElementById('streak-value').textContent = user.streak;
-  document.getElementById('xp-value').textContent = `${user.xp} XP`;
+  const isEnglish = root === 'english';
+  const english = store.state.english;
+  document.body.classList.toggle('english-mode', isEnglish);
+  document.getElementById('streak-value').textContent = isEnglish ? english.streak : user.streak;
+  document.getElementById('xp-value').textContent = `${isEnglish ? english.xp : user.xp} XP`;
   document.getElementById('sidebar-name').textContent = user.name;
   document.getElementById('sidebar-level').textContent = `Nível ${computed.level}`;
   const avatar = document.getElementById('sidebar-avatar');
@@ -375,8 +483,10 @@ function updateChrome(root = routeParts().parts[0]) {
   const dueCount = document.getElementById('due-count');
   dueCount.textContent = computed.dueCards.length;
   dueCount.dataset.count = computed.dueCards.length;
-  const activeRoot = ({ lesson: 'learn', 'study-session': exerciseSession?.mode === 'review' ? 'review' : exerciseSession?.mode === 'daily' ? 'daily' : 'learn', project: 'projects', exam: 'exams', 'exam-session': 'exams', 'exam-result': 'exams', 'flashcard-session': 'flashcards', coach: 'coach', chat: 'coach', agents: 'coach' })[root] ?? root;
+  const englishPage = routeParts().parts[1] ?? 'dashboard';
+  const activeRoot = isEnglish ? `english-${['session', 'result', 'lesson'].includes(englishPage) ? (englishSession?.exitRoute === 'review' ? 'review' : 'learn') : englishPage}` : ({ lesson: 'learn', 'study-session': exerciseSession?.mode === 'review' ? 'review' : exerciseSession?.mode === 'daily' ? 'daily' : 'learn', project: 'projects', exam: 'exams', 'exam-session': 'exams', 'exam-result': 'exams', 'flashcard-session': 'flashcards', coach: 'coach', chat: 'coach', agents: 'coach' })[root] ?? root;
   document.querySelectorAll('[data-nav]').forEach((link) => link.classList.toggle('active', link.dataset.nav === activeRoot));
+  document.querySelectorAll('[data-course]').forEach((link) => link.classList.toggle('active', link.dataset.course === (isEnglish ? 'english' : 'java')));
 }
 
 function applyTheme() {
@@ -398,7 +508,7 @@ function openCommandPalette() {
 function renderCommandPalette(query) {
   const root = document.getElementById('command-palette');
   const routes = [
-    ['⌂', 'Visão geral', 'Seu painel adaptativo', 'dashboard'], ['◫', 'Trilha Java', '30 lições', 'learn'], ['✦', 'Missão diária', 'Prática intercalada', 'daily'], ['↻', 'Revisar erros', 'Recuperação ativa', 'review'], ['▤', 'Flashcards', 'Repetição espaçada', 'flashcards'], ['✓', 'Provas', 'Avaliações completas', 'exams'], ['⌘', 'Projetos', 'Prática guiada', 'projects'], ['◎', 'Entrevistas', '50 perguntas', 'interview'], ['</>', 'Playground', 'Executar Java', 'playground'], ['◷', 'Foco', 'Pomodoro', 'focus'], ['✦', 'Coach IA', 'Mentores especializados', 'coach'],
+    ['⌂', 'Visão geral', 'Seu painel adaptativo', 'dashboard'], ['◫', 'Trilha Java', '30 lições', 'learn'], ['🇺🇸', 'Inglês do zero', '24 lições do A0 ao A1', 'english'], ['🧠', 'Revisão de inglês', 'Memória adaptativa', 'english/review'], ['✦', 'Missão diária', 'Prática intercalada', 'daily'], ['↻', 'Revisar erros', 'Recuperação ativa', 'review'], ['▤', 'Flashcards', 'Repetição espaçada', 'flashcards'], ['✓', 'Provas', 'Avaliações completas', 'exams'], ['⌘', 'Projetos', 'Prática guiada', 'projects'], ['◎', 'Entrevistas', '50 perguntas', 'interview'], ['</>', 'Playground', 'Executar Java', 'playground'], ['◷', 'Foco', 'Pomodoro', 'focus'], ['✦', 'Coach IA', 'Mentores especializados', 'coach'],
     ...curriculum.lessons.map((lesson) => ['◫', lesson.title, lesson.description, `lesson/${lesson.id}`]),
   ];
   const normalized = query.toLocaleLowerCase('pt-BR');
@@ -429,6 +539,26 @@ document.addEventListener('click', async (event) => {
     exerciseSession.answer = input.value;
     token.disabled = true;
   }
+
+  const englishAnswerButton = event.target.closest('[data-english-answer]');
+  if (englishAnswerButton && englishSession) {
+    document.querySelectorAll('[data-english-answer]').forEach((button) => button.classList.remove('selected'));
+    englishAnswerButton.classList.add('selected');
+    englishSession.answer = englishAnswerButton.dataset.englishAnswer;
+  }
+
+  const englishToken = event.target.closest('[data-english-token]');
+  if (englishToken && englishSession) {
+    const input = document.getElementById('english-answer');
+    const values = input.value ? input.value.split(' ').filter(Boolean) : [];
+    values.push(englishToken.dataset.englishToken);
+    input.value = values.join(' ');
+    englishSession.answer = input.value;
+    englishToken.disabled = true;
+  }
+
+  const speakButton = event.target.closest('[data-speak]');
+  if (speakButton) speakEnglish(speakButton.dataset.speak);
 
   const action = event.target.closest('[data-action]')?.dataset.action;
   if (action === 'exercise-check') checkExercise();
@@ -495,6 +625,31 @@ document.addEventListener('click', async (event) => {
   if (action === 'import-data') importBackup();
   if (action === 'reset-data') confirmReset();
   if (action === 'ai-settings') aiSettingsModal();
+  if (action === 'english-check') checkEnglishExercise();
+  if (action === 'english-next') nextEnglishExercise();
+  if (action === 'english-hint' && englishSession) {
+    const answer = englishSession.exercises[englishSession.index].correct_answer;
+    englishSession.hint = englishSession.hint ? `Começa com “${answer.slice(0, Math.min(3, answer.length))}…”` : 'Fale a ideia em voz alta primeiro e procure as palavras que você já conhece.';
+    render();
+  }
+  if (action === 'english-clear-order' && englishSession) { englishSession.answer = ''; render(); }
+  if (action === 'english-pronounce') recognizeEnglish();
+  if (action === 'english-daily') {
+    const available = englishCurriculum.exercises.filter((item) => item.lesson_id <= Math.max(1, englishStats().nextLesson.id));
+    const index = seededIndex(`english-${dayKey()}`, Math.max(1, available.length - 5));
+    startEnglishSet(available.slice(index, index + 5), 'daily', 'dashboard');
+  }
+  if (action === 'english-review') {
+    const computedEnglish = englishStats();
+    const selected = [...computedEnglish.activeMistakes.map((item) => englishExerciseById(item.exerciseId)), ...computedEnglish.dueCards.map(englishExerciseById)].filter(Boolean);
+    const unique = [...new Map(selected.map((item) => [item.id, item])).values()];
+    const fallbackLesson = store.state.english.completedLessons.at(-1) ?? 1;
+    startEnglishSet((unique.length ? unique : englishLessonExercises(fallbackLesson)).slice(0, 12), 'review', 'review');
+  }
+  if (action === 'english-repeat' && englishSession) {
+    Object.assign(englishSession, { index: 0, correctCount: 0, checked: false, correct: false, answer: '', hint: '', finished: false, xpEarned: 0 });
+    go('english/session');
+  }
 
   const filterCategory = event.target.closest('[data-filter-category]');
   if (filterCategory) { interviewFilters.category = filterCategory.dataset.filterCategory; render(); }
@@ -519,6 +674,7 @@ document.addEventListener('input', (event) => {
   }
   if (event.target.id === 'playground-code') playgroundCode = event.target.value;
   if (event.target.id === 'focus-task' && focusTimer) focusTimer.task = event.target.value;
+  if (event.target.id === 'english-answer' && englishSession) englishSession.answer = event.target.value;
 });
 
 document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
@@ -553,6 +709,9 @@ document.addEventListener('keydown', (event) => {
   }
   if (exerciseSession && routeParts().parts[0] === 'study-session' && !exerciseSession.checked && /^[a-d]$/i.test(event.key)) {
     document.querySelectorAll('[data-answer]')[event.key.toLocaleLowerCase().charCodeAt(0) - 97]?.click();
+  }
+  if (englishSession && routeParts().parts[0] === 'english' && routeParts().parts[1] === 'session' && !englishSession.checked && /^[1-4]$/.test(event.key)) {
+    document.querySelectorAll('[data-english-answer]')[Number(event.key) - 1]?.click();
   }
 });
 

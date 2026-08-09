@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "Plataforma adaptativa de estudos Java feita com HTML, CSS e JavaScript.",
+  "description": "Plataforma adaptativa para estudar Java e inglês do zero com HTML, CSS e JavaScript.",
   "scripts": {
     "data": "node scripts/convert-sql-to-js.mjs",
     "dev": "node scripts/serve.mjs",

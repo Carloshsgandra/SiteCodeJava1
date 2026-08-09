@@ -6,7 +6,7 @@ const isoDay = (date = new Date()) => date.toISOString().slice(0, 10);
 
 function createDefaultState() {
   return {
-    version: 3,
+    version: 4,
     updatedAt: new Date().toISOString(),
     user: {
       name: 'Dev Java',
@@ -34,6 +34,19 @@ function createDefaultState() {
     notes: {},
     daily: {},
     achievements: [],
+    english: {
+      xp: 0,
+      streak: 0,
+      lastStudyDay: null,
+      totalAttempted: 0,
+      totalCorrect: 0,
+      completedLessons: [],
+      lessonScores: {},
+      mistakes: [],
+      flashcards: {},
+      activity: {},
+      daily: {},
+    },
     settings: {
       theme: 'light',
       sound: true,
@@ -54,7 +67,7 @@ function migrate(input) {
   return {
     ...defaults,
     ...input,
-    version: 3,
+    version: 4,
     user: { ...defaults.user, ...(input.user ?? {}) },
     settings: { ...defaults.settings, ...(input.settings ?? {}) },
     completedLessons: Array.isArray(input.completedLessons) ? input.completedLessons : [],
@@ -69,6 +82,16 @@ function migrate(input) {
     notes: input.notes ?? {},
     daily: input.daily ?? {},
     achievements: Array.isArray(input.achievements) ? input.achievements : [],
+    english: {
+      ...defaults.english,
+      ...(input.english ?? {}),
+      completedLessons: Array.isArray(input.english?.completedLessons) ? input.english.completedLessons : [],
+      lessonScores: input.english?.lessonScores ?? {},
+      mistakes: Array.isArray(input.english?.mistakes) ? input.english.mistakes : [],
+      flashcards: input.english?.flashcards ?? {},
+      activity: input.english?.activity ?? {},
+      daily: input.english?.daily ?? {},
+    },
   };
 }
 
@@ -168,6 +191,29 @@ function touchStudy() {
     state.user.streak = difference === 1 ? state.user.streak + 1 : 1;
   }
   state.user.lastStudyDay = today;
+}
+
+function touchEnglish() {
+  const today = isoDay();
+  const english = state.english;
+  if (english.lastStudyDay === today) return;
+  if (!english.lastStudyDay) english.streak = 1;
+  else {
+    const difference = Math.round((new Date(`${today}T12:00:00`) - new Date(`${english.lastStudyDay}T12:00:00`)) / 86400000);
+    english.streak = difference === 1 ? english.streak + 1 : 1;
+  }
+  english.lastStudyDay = today;
+}
+
+function addEnglishActivity(type, metadata = {}) {
+  const today = isoDay();
+  state.english.activity[today] ??= { xp: 0, exercises: 0, lessons: 0, events: [] };
+  const current = state.english.activity[today];
+  if (type === 'exercise') current.exercises += 1;
+  if (type === 'lesson') current.lessons += 1;
+  if (type === 'xp') current.xp += Number(metadata.amount) || 0;
+  current.events.push({ type, at: new Date().toISOString(), ...metadata });
+  current.events = current.events.slice(-40);
 }
 
 function checkAchievements() {
@@ -272,6 +318,74 @@ export const store = {
     checkAchievements();
     persist();
     return firstCompletion;
+  },
+
+  recordEnglishAnswer(exerciseId, correct, answer, lessonId, xpReward = 0) {
+    const english = state.english;
+    touchEnglish();
+    english.totalAttempted += 1;
+    if (correct) english.totalCorrect += 1;
+    addEnglishActivity('exercise', { exerciseId, correct, lessonId });
+    const index = english.mistakes.findIndex((item) => item.exerciseId === exerciseId);
+    if (correct && index >= 0) {
+      const mistake = english.mistakes[index];
+      mistake.correctReviews = (mistake.correctReviews ?? 0) + 1;
+      mistake.mastered = mistake.correctReviews >= 2;
+      mistake.lastReviewedAt = new Date().toISOString();
+    } else if (!correct) {
+      const mistake = { exerciseId, lessonId, answer, attempts: index >= 0 ? english.mistakes[index].attempts + 1 : 1, correctReviews: 0, mastered: false, lastWrongAt: new Date().toISOString() };
+      if (index >= 0) english.mistakes[index] = mistake;
+      else english.mistakes.push(mistake);
+    }
+    if (correct && xpReward) {
+      english.xp += xpReward;
+      addEnglishActivity('xp', { amount: xpReward, exerciseId, lessonId });
+    }
+    if (!english.flashcards[exerciseId]) {
+      const due = new Date();
+      if (correct) due.setDate(due.getDate() + 1);
+      english.flashcards[exerciseId] = { interval: correct ? 1 : 0, ease: 2.5, repetitions: correct ? 1 : 0, due: due.toISOString(), lastRating: correct ? 'good' : 'again', reviewedAt: new Date().toISOString() };
+    }
+    persist();
+  },
+
+  completeEnglishLesson(lessonId, score, xpReward) {
+    const english = state.english;
+    const firstCompletion = !english.completedLessons.includes(lessonId);
+    if (firstCompletion) {
+      english.completedLessons.push(lessonId);
+      english.xp += xpReward;
+      addEnglishActivity('xp', { amount: xpReward, lessonId });
+      addEnglishActivity('lesson', { lessonId });
+    }
+    english.lessonScores[lessonId] = Math.max(english.lessonScores[lessonId] ?? 0, score);
+    touchEnglish();
+    persist();
+    return firstCompletion;
+  },
+
+  rateEnglishCard(exerciseId, rating = 'good') {
+    const english = state.english;
+    const current = english.flashcards[exerciseId] ?? { interval: 0, ease: 2.5, repetitions: 0 };
+    let ease = current.ease;
+    let repetitions = current.repetitions;
+    let interval = 1;
+    if (rating === 'again') {
+      interval = 0;
+      repetitions = 0;
+      ease = Math.max(1.3, ease - 0.2);
+    } else {
+      repetitions += 1;
+      if (rating === 'hard') ease = Math.max(1.3, ease - 0.15);
+      if (rating === 'easy') ease += 0.15;
+      const multiplier = rating === 'hard' ? 1.2 : rating === 'easy' ? 1.6 : 1;
+      interval = repetitions === 1 ? 1 : repetitions === 2 ? 3 : Math.max(1, Math.round((current.interval || 3) * ease * multiplier));
+    }
+    const due = new Date();
+    due.setDate(due.getDate() + interval);
+    english.flashcards[exerciseId] = { interval, ease, repetitions, due: due.toISOString(), lastRating: rating, reviewedAt: new Date().toISOString() };
+    touchEnglish();
+    persist();
   },
 
   rateFlashcard(exerciseId, rating) {

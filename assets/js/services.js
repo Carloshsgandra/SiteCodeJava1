@@ -94,11 +94,43 @@ function balancedBraces(code) {
   return (code.match(/\{/g) || []).length === (code.match(/\}/g) || []).length;
 }
 
-function evaluateSimpleExpression(expression, variables) {
-  let candidate = expression.trim();
-  for (const [name, value] of Object.entries(variables)) {
-    candidate = candidate.replace(new RegExp(`\\b${name}\\b`, 'g'), JSON.stringify(value));
+function replaceVariablesOutsideStrings(expression, variables) {
+  let output = '';
+  let quote = null;
+
+  for (let index = 0; index < expression.length;) {
+    const char = expression[index];
+    if (quote) {
+      output += char;
+      if (char === '\\' && index + 1 < expression.length) {
+        output += expression[index + 1];
+        index += 2;
+        continue;
+      }
+      if (char === quote) quote = null;
+      index += 1;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      output += char;
+      index += 1;
+      continue;
+    }
+    const identifier = expression.slice(index).match(/^[A-Za-z_$][\w$]*/)?.[0];
+    if (identifier) {
+      output += Object.hasOwn(variables, identifier) ? JSON.stringify(variables[identifier]) : identifier;
+      index += identifier.length;
+      continue;
+    }
+    output += char;
+    index += 1;
   }
+  return output;
+}
+
+function evaluateSimpleExpression(expression, variables) {
+  let candidate = replaceVariablesOutsideStrings(expression.trim(), variables);
   candidate = candidate.replace(/\.length\(\)/g, '.length');
   if (!/^[\d\s+\-*/%().,!<>=&|?\[\]"'A-Za-zÀ-ÿ:_]+$/.test(candidate)) return expression.trim();
   if (/\b(?:fetch|window|document|globalThis|Function|constructor|eval|import|require)\b/.test(candidate)) return expression.trim();

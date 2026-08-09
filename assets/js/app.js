@@ -557,10 +557,15 @@ document.addEventListener('keydown', (event) => {
 });
 
 store.subscribe(() => updateChrome());
-applyTheme();
-if (!location.hash) location.hash = '#/dashboard';
-render();
 
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+async function boot() {
+  await store.ready;
+  applyTheme();
+  if (!location.hash) location.hash = '#/dashboard';
+  render();
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
 }
+
+boot();

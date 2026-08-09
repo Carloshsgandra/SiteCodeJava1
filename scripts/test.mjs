@@ -28,4 +28,9 @@ const index = await readFile(resolve(root, 'index.html'), 'utf8');
 assert(!index.includes('th:'), 'A nova interface não pode depender de Thymeleaf.');
 assert(index.includes('type="module"'), 'A aplicação deve carregar módulos JavaScript.');
 
+const storeSource = await readFile(resolve(root, 'assets/js/store.js'), 'utf8');
+assert(storeSource.includes("localStorage.setItem(STORAGE_KEY"), 'O estado deve ter uma gravação síncrona entre sessões.');
+assert(storeSource.includes('indexedDB.open(BACKUP_DB'), 'O estado deve manter uma segunda cópia persistente no IndexedDB.');
+assert(storeSource.includes('const ready ='), 'A aplicação deve aguardar a restauração antes de renderizar.');
+
 console.log('Todos os testes de estrutura e conteúdo passaram.');

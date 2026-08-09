@@ -1,10 +1,13 @@
 const STORAGE_KEY = 'javaflow-state-v3';
+const BACKUP_DB = 'javaflow-persistent-backup';
+const BACKUP_STORE = 'snapshots';
 
 const isoDay = (date = new Date()) => date.toISOString().slice(0, 10);
 
 function createDefaultState() {
   return {
     version: 3,
+    updatedAt: new Date().toISOString(),
     user: {
       name: 'Dev Java',
       email: '',
@@ -77,11 +80,67 @@ function load() {
   }
 }
 
+const hadLocalState = localStorage.getItem(STORAGE_KEY) !== null;
 let state = load();
 const listeners = new Set();
 
+function openBackupDatabase() {
+  if (!('indexedDB' in globalThis)) return Promise.reject(new Error('IndexedDB indisponível'));
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(BACKUP_DB, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(BACKUP_STORE)) request.result.createObjectStore(BACKUP_STORE);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function readBackup() {
+  const database = await openBackupDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(BACKUP_STORE, 'readonly');
+    const request = transaction.objectStore(BACKUP_STORE).get(STORAGE_KEY);
+    request.onsuccess = () => resolve(request.result ?? null);
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => database.close();
+  });
+}
+
+async function writeBackup(snapshot) {
+  const database = await openBackupDatabase();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(BACKUP_STORE, 'readwrite');
+    transaction.objectStore(BACKUP_STORE).put(snapshot, STORAGE_KEY);
+    transaction.oncomplete = () => { database.close(); resolve(); };
+    transaction.onerror = () => { database.close(); reject(transaction.error); };
+  });
+}
+
+function queueBackup() {
+  const snapshot = typeof structuredClone === 'function' ? structuredClone(state) : JSON.parse(JSON.stringify(state));
+  writeBackup(snapshot).catch(() => {});
+}
+
+const ready = (async () => {
+  try {
+    const backup = await readBackup();
+    const backupIsNewer = backup?.updatedAt && (!state.updatedAt || new Date(backup.updatedAt) > new Date(state.updatedAt));
+    if (backup && (!hadLocalState || backupIsNewer)) {
+      state = migrate(backup);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } else {
+      await writeBackup(state);
+    }
+  } catch {
+    // O localStorage continua sendo a cópia síncrona quando IndexedDB não está disponível.
+  }
+})();
+
 function persist() {
+  state.updatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  queueBackup();
   listeners.forEach((listener) => listener(state));
 }
 
@@ -129,6 +188,8 @@ function checkAchievements() {
 }
 
 export const store = {
+  ready,
+
   get state() {
     return state;
   },
